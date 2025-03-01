@@ -2,7 +2,7 @@ from flask import Flask, request, render_template, redirect, url_for, flash, ses
 from werkzeug.utils import secure_filename
 from datetime import timedelta
 from functools import wraps
-
+from form import LoginForm, SignupForm, FileUpload
 
 # flask configuration settings
 app=Flask(__name__)
@@ -23,7 +23,8 @@ def login_required(f):
 
 @app.route("/login")
 def login():
-	
+	login = LoginForm()
+	if login.validate_on_submit 
 
 @app.get("/")
 @app.get("/dashboard/")
