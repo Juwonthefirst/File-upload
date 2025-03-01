@@ -1,7 +1,7 @@
 from flask_wtf import FlaskForm
 from flask_wtf.file import FileField, FileRequired
 from wtforms import StringField, PasswordField,BooleanField, SubmitField
-from wtforms.validators import Length, DataRequired,Email, Equalto
+from wtforms.validators import Length, DataRequired,Email, EqualTo
 
 
 class LoginForm(FlaskForm):
@@ -16,7 +16,7 @@ class SignupForm(FlaskForm):
 	username = StringField("Username", validators = [DataRequired(), Length(min = 3, max = 20)])
 	email = StringField("Email", validators = [DataRequired(),Email()])
 	password = PasswordField("Password", validators = [DataRequired(), Length(min = 8)])
-	c_password = PasswordField("Confirm Password", validators = [DataRequired(), Length(min = 8), Equalto("password")])
+	c_password = PasswordField("Confirm Password", validators = [DataRequired(), Length(min = 8), EqualTo("password")])
 	signup = SubmitField("Sign Up")
 	
 	
