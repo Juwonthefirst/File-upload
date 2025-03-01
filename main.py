@@ -38,11 +38,15 @@ def login_required(f):
 
 @app.route("/login")
 def login():
-	login = LoginForm()
-	if login.validate_on_submit():
+	LoginForm = LoginForm()
+	if LoginForm.validate_on_submit():
+		# sql authorization here before redirecting
+		session["username"] = LoginForm.username.data
+		return redirect(url_for("dashboard"))
+	return render_template("login.html", form=LoginForm)
 		
 @app.get("/dashboard/")
 @app.get("/")
 @login_required
 def dashboard():
-	pass
+	return render_templatr("home.html")
