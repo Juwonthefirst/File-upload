@@ -3,13 +3,20 @@ from werkzeug.utils import secure_filename
 from datetime import timedelta
 from functools import wraps
 from form import LoginForm, SignupForm, FileUpload
+from dotenv import load_dotenv
+import os
+
+
+load_dotenv(".env")
 
 # flask configuration settings
 app=Flask(__name__)
-app.config["SQLALCHEMY_DATABASE_URI"] = "sqlite:///mock.db"
-app.config["SECRET_KEY"] = "c0013adc9440afb24b0e40c0e0d3274c"
+app.config["SQLALCHEMY_DATABASE_URI"] = os.getenv("DATABASE_URL")
+app.config["SECRET_KEY"] = os.getenv("SECRET_KEY")
 app.permanent_session_lifetime = timedelta(days=30)
 
+assert app.config["SQLALCHEMY_DATABASE_URI"] != None
+assert app.config["SECRET_KEY"] != None
 
 def login_required(f):
 	# wrapper to restrict access to login necessary areas
@@ -24,7 +31,8 @@ def login_required(f):
 @app.route("/login")
 def login():
 	login = LoginForm()
-	if login.validate_on_submit 
+	if login.validate_on_submit:
+		pass
 
 @app.get("/")
 @app.get("/dashboard/")
