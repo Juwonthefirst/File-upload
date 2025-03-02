@@ -1,3 +1,7 @@
 Flask==3.1.0
 gunicorn==20.1.0
 argon2.cffi==23.1.0
+flask-sqlalchemy==3.1.1
+sqlalchemy==2.0.38
+flask-wtf==1.2.2
+wtforms==3.2.1
