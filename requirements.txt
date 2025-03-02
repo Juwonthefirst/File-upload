@@ -5,3 +5,4 @@ flask-sqlalchemy==3.1.1
 sqlalchemy==2.0.38
 flask-wtf==1.2.2
 wtforms==3.2.1
+dotenv
