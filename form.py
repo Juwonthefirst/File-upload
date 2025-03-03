@@ -1,7 +1,8 @@
 from flask_wtf import FlaskForm
-from flask_wtf.file import FileField, FileRequired
+from flask_wtf.file import FileField, FileRequired, FileAllowed
 from wtforms import StringField, PasswordField,BooleanField, SubmitField
 from wtforms.validators import Length, DataRequired,Email, EqualTo
+
 
 
 class LoginForm(FlaskForm):
@@ -22,5 +23,5 @@ class SignupForm(FlaskForm):
 	
 class FileUpload(FlaskForm):
 	
-	file = FileField("File upload", validators = [FileRequired()])
+	file = FileField("File upload", validators = [FileRequired(),FileAllowed(["jpg", "png", "gif", "webp", "svg", "pdf", "docx", "xlsx", "pptx", "txt", "mp4", "mov", "avi", "mkv", "mp3", "wav", "ogg", "zip", "rar", "7z", "tar.gz"], "Filetype not supported")])
 	upload = SubmitField("Upload")
