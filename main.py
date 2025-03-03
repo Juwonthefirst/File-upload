@@ -7,8 +7,7 @@ from argon2.exceptions import VerifyMismatchError
 from form import LoginForm, SignupForm, FileUpload
 from dotenv import load_dotenv
 import os
-from MyDBAlchemy import db, Users,  create_table
-import ssl
+from MyDBAlchemy import db, Users, Uploads, init_table
 
 # loading and validating variables
 load_dotenv(".env")
@@ -24,18 +23,15 @@ def validate_env():
 app=Flask(__name__)
 validate_env()
 
-ssl_context = ssl.create_default_context()
-ssl_context.check_hostname = False
-ssl_context.verify_mode = ssl.CERT_NONE
 
 app.config["SQLALCHEMY_DATABASE_URI"] = os.getenv("DATABASE_URL")
 app.config["SECRET_KEY"] = os.getenv("SECRET_KEY")
 app.permanent_session_lifetime = timedelta(days=1)
-app.config['SQLALCHEMY_ENGINE_OPTIONS'] = {"connect_args": {"ssl_context": ssl_context}}
+
 
 #initializing other modules
 db.init_app(app)
-create_table(app)
+init_table(app)
 ph = PasswordHasher()
 
 
@@ -54,33 +50,45 @@ def login_required(f):
 
 @app.route("/login", methods = ["GET", "POST"])
 def login():
-	LoginForm = LoginForm()
-	if LoginForm.validate_on_submit():
-		# sql authorization here before redirecting
-		session["username"] = LoginForm.username.data
-		return redirect(url_for("dashboard"))
-	return render_template("login.html", form=LoginForm)
+	error_dict = {}
+	form = LoginForm()
+	if form.validate_on_submit():
+		username = form.username.data
+		password = form.password.data
+		user_info = db.session.execute(db.select(Users).where(Users.username == username)).scalar_one_or_none()
+		if user_info:
+			try:
+				if ph.verify(user_info.password, password):
+					session["username"] = username
+					session["id"] = user_info.id
+					return redirect(url_for("dashboard"))
+			except VerifyMismatchError:
+				error_dict["password_error"] = True
+		else:
+			error_dict["user_error"] = True			
+	return render_template("login.html", form=form, error=error_dict)
 
 
 @app.route("/signup", methods = ["GET", "POST"])
 def signup():
-	SignupForm = SignupForm()
-	if SignupForm.validate_on_submit():
-		username = SignupForm.username.data
-		email = SignupForm.email.data
-		passw = SignupForm.password.data
+	form = SignupForm()
+	if form.validate_on_submit():
+		username = form.username.data
+		email = form.email.data
+		password = form.password.data
 		username_exist = Users.Fetch("username", username)
 		email_exist = Users.Fetch("email", email)
 		if (not username_exist) and (not email_exist):
-			hashed_password = ph.hash(passw)
+			hashed_password = ph.hash(password)
 			new_user = Users(username = username, email = email, password = hashed_password)
 			new_user.save()
 			session["username"] = username
+			session["id"] = new_user.id
 			return redirect(url_for("dashboard"))
 		else:
 			potential_error = [username_exist, email_exist]
 			errors = [error for error in potential_error if error]
-	return render_template("signup.html", errors = errors,  form=SignupForm)
+	return render_template("signup.html", errors = errors,  form=form)
 	
 					
 @app.get("/dashboard/")
@@ -88,3 +96,5 @@ def signup():
 @login_required
 def dashboard():
 	return render_templatr("home.html")
+	
+app.run(debug=True)
