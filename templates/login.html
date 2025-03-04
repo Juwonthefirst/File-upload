@@ -8,7 +8,19 @@
 </head>
 
 <body>
-   
+    <main>
+       <form action="{{ request.path }}" method="post">
+           {{ form.hidden_tag() }}
+           <fieldset>
+               <legend><span>Login to continue</span></legend>
+               <br>
+               {{ form.username.label(class="label username") }}
+               <br>
+               {{ form.username }}
+               
+           </fieldset>
+       </form>
+    </main>
 </body>
 
 </html>
