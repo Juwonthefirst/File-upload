@@ -41,6 +41,9 @@ class R2:
 				"ResponseContentDisposition": "attachment"},
 			ExpiresIn=expiration)
 		except ClientError:
-			return 404
+			return False
 			
+	@classmethod
+	def delete(cls):
+		pass
 	

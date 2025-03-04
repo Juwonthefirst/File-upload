@@ -69,8 +69,9 @@ class Users(db.Model):
 class Uploads(db.Model):
 	
 	id:Mapped[int] = mapped_column(Integer, primary_key = True)
-	filename: Mapped[str] = mapped_column(String(), nullable = False)
+	filename: Mapped[str] = mapped_column(String(255), nullable = False)
 	filesize:Mapped[int] = mapped_column(Integer, nullable = False)
+	filelocation:Mapped[str] = mapped_column(String(255), nullable = False, unique = True)
 	uploaded_at: Mapped[datetime] = mapped_column(DateTime, server_default = func.now())
 	user_id: Mapped[int] = mapped_column(db.ForeignKey("users.id"), nullable = False)
 	

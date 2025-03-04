@@ -23,5 +23,5 @@ class SignupForm(FlaskForm):
 	
 class FileUpload(FlaskForm):
 	
-	file = FileField("File upload", validators = [FileRequired(),FileAllowed(["jpg", "png", "gif", "webp", "svg", "pdf", "docx", "xlsx", "pptx", "txt", "mp4", "mov", "avi", "mkv", "mp3", "wav", "ogg", "zip", "rar", "7z", "tar.gz"], "Filetype not supported")])
+	file = FileField("File upload", validators = [FileRequired(),FileAllowed(["jpg", "png", "gif", "webp", "svg", "pdf", "docx", "xlsx", "pptx", "txt", "mp4", "mov", "avi", "mkv", "mp3", "wav", "ogg", "zip", "rar", "7z", "tar.gz"], "Filetype not supported, try putting it into a zip file then try again")])
 	upload = SubmitField("Upload")
