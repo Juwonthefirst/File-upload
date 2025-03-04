@@ -1,4 +1,4 @@
-from flask import Flask, request, render_template, redirect, url_for, flash, session
+from flask import Flask, render_template, redirect, url_for, flash, session
 from werkzeug.utils import secure_filename
 from datetime import timedelta
 from functools import wraps
@@ -61,6 +61,7 @@ def login():
 				if ph.verify(user_info.password, password):
 					session["username"] = username
 					session["id"] = user_info.id
+					session["email"] = user_info.email
 					return redirect(url_for("dashboard"))
 			except VerifyMismatchError:
 				error_dict["password_error"] = True
@@ -84,6 +85,7 @@ def signup():
 			new_user.save()
 			session["username"] = username
 			session["id"] = new_user.id
+			session["email"] = email
 			return redirect(url_for("dashboard"))
 		else:
 			potential_error = [username_exist, email_exist]
@@ -97,10 +99,10 @@ def signup():
 def dashboard():
 	user_id = session["id"]
 	username = session["username"]
+	upload = FileUpload()
 	if request.method == "POST":
-		form = FileUpload()
-		if form.validate_on_submit():
-			file = form.file.data
+		if upload.validate_on_submit():
+			file = upload.file.data
 			file_name = secure_filename(file.filename)
 			file_size = os.path.getsize(file)
 			file_data = Uploads(filename = file_name, filesize = file_size, filelocation = unknown, user_id = user_id)
@@ -114,4 +116,4 @@ def dashboard():
 	else:
 		pass
 		
-	return render_template("home.html")
+	return render_template("home.html", upload = upload)
