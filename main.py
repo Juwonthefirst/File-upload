@@ -8,7 +8,7 @@ from form import LoginForm, SignupForm, FileUpload
 from dotenv import load_dotenv
 import os
 from MyDBAlchemy import db, Users, Uploads, init_table
-
+from R2_manager import R2
 # loading and validating variables
 load_dotenv(".env")
 
@@ -91,10 +91,27 @@ def signup():
 	return render_template("signup.html", errors = errors,  form=form)
 	
 					
-@app.get("/dashboard/")
-@app.get("/")
+@app.route("/dashboard/", methods = ["GET", "POST"])
+@app.route("/", methods = ["GET", "POST"])
 @login_required
 def dashboard():
-	return render_templatr("home.html")
-	
-app.run(debug=True)
+	user_id = session["id"]
+	username = session["username"]
+	if request.method == "POST":
+		form = FileUpload()
+		if form.validate_on_submit():
+			file = form.file.data
+			file_name = secure_filename(file.filename)
+			file_size = os.path.getsize(file)
+			file_data = Uploads(filename = file_name, filesize = file_size, filelocation = unknown, user_id = user_id)
+			file_data.add()
+			file_location = f"{username}/{file_data.id}"
+			file_data.filelocation = file_location
+			if R2.upload(file, file_location):
+				pass #flash a message here
+			else:
+				pass #flash error message
+	else:
+		pass
+		
+	return render_template("home.html")
