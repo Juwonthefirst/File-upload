@@ -17,21 +17,22 @@
             <img src="../static/image/logo.jpeg" alt="logo" />
         </div>
         <form action="{{ request.path }}" method="post">
+            <div class="form">
             <div class="user field">
-                <ion-icon name="person-outline"></ion-icon>
                 <label for="Username">Username</label>
                 <br>
+                <ion-icon name="person-outline"></ion-icon>
                 <input type="text" name="username" id="Username" placeholder="Enter your username..."/>
             </div>
             <div class="pass field">
-                <ion-icon name="lock-closed-outline"></ion-icon>
                 <label for="Password">Password</label>
                 <br />
+                <ion-icon name="lock-closed-outline"></ion-icon>
                 <input type="password" name="password" id="Password" placeholder="*********"/>
             </div>
-            <br><br>
             <div>
                 <input type="submit" />
+            </div>
             </div>
         </form>
         <div class="smalls">
