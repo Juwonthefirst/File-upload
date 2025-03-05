@@ -10,7 +10,10 @@ body{
     overflow-y: hidden;
     justify-content: center;
     align-items: center;
-    display: flex;
+}
+
+.screen{
+    display:flex
 }
 
 .logo{
