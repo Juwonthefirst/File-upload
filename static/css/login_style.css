@@ -1,6 +1,6 @@
 * {
   font-family: "Poppins";
-  font-weight: 600;
+  font-weight: 500;
 }
 
 body{
@@ -30,7 +30,9 @@ input{
     flex-direction: column;
     gap: 3em;
 }
+
 .screen{
+    margin-top: 1em;
     background-color: black;
     padding: 1.5rem;
     display:flex;
@@ -85,7 +87,8 @@ ion-icon{
     background-color: white;
     color: black;
     width: 100%;
-    height: 100%
+    height: 100%;
+    font-weight: 700;
 }
 
 .smalls{
