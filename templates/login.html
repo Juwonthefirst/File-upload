@@ -3,7 +3,7 @@
 
 <head>
     <meta charset="UTF-8">
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/login_styles.css'}}" type="text/css" media="all" />
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/login_styles.css' }}" type="text/css" media="all" />
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>Login To Your Account</title>
 </head>
@@ -15,9 +15,9 @@
            <fieldset>
                <legend><span>Login to continue</span></legend>
                <br>
-               {{ form.username.label(class="label username") }}
+               {{ form.username.label(class="label username", placeholder="Enter your username....") }}
                <br>
-               {{ form.username }}
+               {{ form.username(placeholder="Enter your username....") }}
                
            </fieldset>
        </form>
