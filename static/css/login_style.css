@@ -1,5 +1,6 @@
 * {
   font-family: "Poppins";
+  font-weight: 600;
 }
 
 body{
@@ -39,8 +40,6 @@ input{
 }
 
 .logo{
-    width: 100%;
-    height: 20%;
     display: flex;
     flex-direction: column;
     justify-content: center;
@@ -66,4 +65,35 @@ input{
 
 ion-icon{
     margin-bottom: -0.2em;
+}
+
+
+.field label{
+    font-size: 1.1em;
+}
+
+.field:hover{
+    border-color: lightblue;
+    color: lightblue;
+}
+
+
+.submit input{
+    border: .20em solid white;
+    border-radius: 2em;
+    padding: 0.5em;
+    background-color: white;
+    color: black;
+    width: 100%;
+    height: 100%
+}
+
+.smalls{
+    padding-bottom: 17em;
+    font-size: 0.75em;
+    display: flex;
+    flex-direction: row;
+    gap: 10em;
+    align-items: center;
+    justify-content: center;
 }
