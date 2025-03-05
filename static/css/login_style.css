@@ -21,7 +21,7 @@ input{
     background-color: black;
     color: white;
     border:none;
-    outline: none;
+    outline: none;padding: 0.2em;
 }
 
 .form{
@@ -56,9 +56,14 @@ input{
 }
 
 .field {
-    border: 0.2rem solid white;
-    border-radius: 2rem;
-    padding: 1rem;
+    border: 0.2em solid white;
+    border-radius: 21px;
+    padding: 1em;
     display:flex;
     flex-direction: column;
+    gap: 0.6em;
+}
+
+ion-icon{
+    margin-bottom: -0.2em;
 }
