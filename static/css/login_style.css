@@ -4,8 +4,7 @@
 }
 
 body{
-    background-image: url("../image/cloud2.jpeg") ;
-    background-repeat: repeat-x;
+    background-color: #E8F9FF;
     color: white;
     height: 100vh;
     overflow-y: hidden;
@@ -20,10 +19,11 @@ a{
 }
 
 input{
-    /*background-color: black;*/
+    background-color: none;
     color: black;
     border:none;
-    outline: none;padding: 0.2em;
+    outline: none;
+    padding: 0.2em;
 }
 
 .form{
@@ -58,8 +58,9 @@ input{
 }
 
 .field {
-    border-bottom: 0.2em solid whitesmoke;
-    /*border-radius: 21px;*/
+    background-color: white; 
+    box-shadow: 0 0 2em whitesmoke;
+    border-radius: 21px;
     padding: 1em;
     display:flex;
     flex-direction: column;
@@ -73,6 +74,7 @@ ion-icon{
 
 .field label{
     font-size: 1.1em;
+    color: black;
 }
 
 .field:hover{
