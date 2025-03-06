@@ -15,30 +15,37 @@
 <body>
     <div class="screen">
         <div class="logo">
-            <div class="flash">
-                <span class="iconify" data-icon="material-symbols:cancel-outline-rounded"></span>
-                <p>Flash error message</p>
-            </div>
-            <img src="../static/image/logo.jpeg" alt="logo" />
+            {% with messages=get_flashed_messages() %}
+                {% if messages %}
+                    {% for message in messages %}
+                        <div class="flash">
+                            <span class="iconify" data-icon="material-symbols:cancel-outline-rounded"></span>
+                            <p>{{ message }}</p>
+                        </div>
+                    {% endfor %}
+                {% endif %}
+            {% endwith %}
+            <img src="{{ url_for('static', filename='image/logo.jpeg' }}" alt="logo" />
         </div>
-        <form action="{{ request.path }}" method="post">
+        <form action="{{ request.path }}" method="POST">
+            {{ form.hidden_tag() }}
             <div class="form">
                 <div class="user field">
-                    <label for="Username">Username</label>
+                    {{ form.username.label }}
                     <div class="input">
                         <ion-icon name="person-outline"></ion-icon>
-                        <input type="text" name="username" id="Username" placeholder="Enter your username..."/>
+                        {{ form.username(placeholder="Enter Username....") }}
                     </div>
                 </div>
                 <div class="pass field">
-                    <label for="Password">Password</label>
+                    {{ form.password.label }}
                     <div class="input">
                         <ion-icon name="lock-closed-outline"></ion-icon>
-                        <input type="password" name="password" id="Password" placeholder="*********"/>
+                        {{ form.password(placeholder="********") }}
                     </div>
                 </div>
                 <div class="submit">
-                    <input type="submit" value="Login" />
+                    {{ form.login }}
                 </div>
             </div>
         </form>
