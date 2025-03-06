@@ -16,6 +16,7 @@ body{
 a{
     /*text-decoration: none;*/
     color: black;
+    cursor: pointer;
 }
 
 input{
@@ -26,6 +27,10 @@ input{
     padding: 0.2em;
 }
 
+p{
+    margin:0;
+}
+
 .form{
     display: flex;
     flex-direction: column;
@@ -33,6 +38,7 @@ input{
 }
 
 .screen{
+    position: relative;
     background-color: #E8F9FF;
     padding: 2em;
     display:flex;
@@ -103,4 +109,14 @@ ion-icon{
     gap: 7em;
     align-items: center;
     justify-content: center;
+}
+
+.submit input{
+    cursor: pointer;
+}
+
+.flash{
+    top:10;
+    text-align: center;
+    z-index: 1;
 }
