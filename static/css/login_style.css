@@ -4,7 +4,8 @@
 }
 
 body{
-    background-color: #B6AFD8 ;
+    background-image: url("../image/cloud2.jpeg") ;
+    background-repeat: repeat-x;
     color: white;
     height: 100vh;
     overflow-y: hidden;
@@ -19,8 +20,8 @@ a{
 }
 
 input{
-    background-color: black;
-    color: white;
+    /*background-color: black;*/
+    color: black;
     border:none;
     outline: none;padding: 0.2em;
 }
@@ -28,12 +29,12 @@ input{
 .form{
     display: flex;
     flex-direction: column;
-    gap: 3em;
+    gap: 2em;
 }
 
 .screen{
     margin-top: 1em;
-    background-color: black;
+    /*background-color: black;*/
     padding: 1.5rem;
     display:flex;
     flex-direction: column;
@@ -57,8 +58,8 @@ input{
 }
 
 .field {
-    border: 0.2em solid white;
-    border-radius: 21px;
+    border-bottom: 0.2em solid whitesmoke;
+    /*border-radius: 21px;*/
     padding: 1em;
     display:flex;
     flex-direction: column;
@@ -81,7 +82,7 @@ ion-icon{
 
 
 .submit input{
-    border: .20em solid white;
+    border-bottom: .20em solid whitesmoke;
     border-radius: 2em;
     padding: 0.5em;
     background-color: white;
