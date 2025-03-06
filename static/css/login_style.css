@@ -27,14 +27,30 @@ input{
     padding: 0.2em;
 }
 
-p{
+.flash{
     margin:0;
     padding: .8em;
-    /*position: absolute;*/
+    border-radius: 10px;
     text-align: center;
-    z-index: 1;
-    background-color: red;
-    width: 80%;
+    background-color: #FF1414;
+    width: 100%;
+    opacity: 1;
+    animation: FadeOut 1s linear alternate infinite;
+}
+
+@keyframes FadeOut{
+    0%{
+        transform: scale(0);
+        opacity: 0; 
+    }
+    80%{
+        transform: scale(1.1);
+        opacity: 1;
+    }
+    100%{
+        transform: scale(1);
+        opacity: 1;
+    }
 }
 
 .form{
@@ -74,7 +90,8 @@ p{
     color: black;
     box-shadow: 0 0 2em whitesmoke;
     border-radius: 21px;
-    border-bottom: .20em solid whitesmoke;
+    border-bottom: .2em solid whitesmoke;
+    border-right: .1em solid whitesmoke;
     padding: 1em;
     display:flex;
     flex-direction: column;
