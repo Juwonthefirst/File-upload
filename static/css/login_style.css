@@ -29,6 +29,12 @@ input{
 
 p{
     margin:0;
+    padding: .8em;
+    /*position: absolute;*/
+    text-align: center;
+    z-index: 1;
+    background-color: red;
+    width: 80%;
 }
 
 .form{
@@ -49,7 +55,7 @@ p{
 }
 
 .logo{
-    padding: 4em 0;
+    padding: 3em 0 3em;
     display: flex;
     flex-direction: column;
     justify-content: center;
@@ -81,7 +87,7 @@ ion-icon{
 
 
 .field label{
-    font-size: 1.1em;
+    font-size: .9em;
 }
 
 .submit:hover input,.field:hover{
@@ -90,10 +96,9 @@ ion-icon{
 }
 
 
-
 .submit input{
     border-radius: 2em;
-    padding: 0.5em;
+    padding: .8em;
     background-color: cadetblue;
     color: white;
     width: 100%;
@@ -102,7 +107,7 @@ ion-icon{
 }
 
 .smalls{
-    padding-bottom: 7em;
+    padding-bottom: 10em;
     font-size: 0.9em;
     display: flex;
     flex-direction: row;
@@ -115,8 +120,3 @@ ion-icon{
     cursor: pointer;
 }
 
-.flash{
-    top:10;
-    text-align: center;
-    z-index: 1;
-}
