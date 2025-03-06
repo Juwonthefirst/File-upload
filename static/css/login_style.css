@@ -35,7 +35,7 @@ input{
 .screen{
     margin-top: 1em;
     /*background-color: black;*/
-    padding: 1.5rem;
+    padding: 2rem;
     display:flex;
     flex-direction: column;
     border-radius: 1.5rem;
@@ -51,7 +51,7 @@ input{
 }
 
 .logo img{
-    margin-top: 2em;
+    margin-bottom: -5em;
     flex-direction: column;
     border-radius: 50%;
     width: 40%;
