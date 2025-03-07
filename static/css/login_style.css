@@ -24,7 +24,7 @@ a{
 }
 
 input{
-    background-color: none;
+    background: none;
     color: black;
     border:none;
     outline: none;
@@ -40,22 +40,20 @@ input{
     background-color: #FF1414;
     width: 100%;
     opacity: 1;
-    gap: .4em
-    /*animation: FadeOut 1s linear alternate infinite;*/
+    gap: .4em;
+    animation: FadeOut 0.5s ease-in 2s forwards;
 }
 
 @keyframes FadeOut{
     0%{
-        transform: scale(0);
-        opacity: 0; 
+        transform: translateX(0);
     }
-    80%{
-        transform: scale(1.1);
-        opacity: 1;
-    }
+    /*90%{
+        transform: translateY(10%);
+    }*/
     100%{
-        transform: scale(1);
-        opacity: 1;
+        transform: translateX(-100%);
+        visibility: hidden;
     }
 }
 
@@ -114,6 +112,7 @@ ion-icon{
 }
 
 .submit:hover input,.field:hover{
+    border-width: .1em .1em .2em .1em;
     border-color: lightblue;
     color: lightblue;
 }
