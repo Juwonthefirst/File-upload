@@ -22,6 +22,7 @@ class R2:
 
 
 	@classmethod
+	#replace with tus for pausable upload
 	def upload(cls, file, stored_filename):
 		try:
 			cls.r2.upload_fileobj(file, cls.bucket, stored_filename)
