@@ -18,9 +18,13 @@ body{
 }
 
 a{
-    /*text-decoration: none;*/
     color: black;
     cursor: pointer;
+    transition: color .5s ease-in;
+}
+
+a:hover{
+    color: darkblue;
 }
 
 input{
@@ -41,18 +45,17 @@ input{
     width: 100%;
     opacity: 1;
     gap: .4em;
-    animation: FadeOut 0.5s ease-in 2s forwards;
+    animation: FadeOut 0.5s ease-in 3s forwards;
 }
 
 @keyframes FadeOut{
-    0%{
+    from{
         transform: translateX(0);
+        opacity: 1;
     }
-    /*90%{
-        transform: translateY(10%);
-    }*/
-    100%{
+    to{
         transform: translateX(-100%);
+        opacity: .3;
         visibility: hidden;
     }
 }
@@ -98,7 +101,7 @@ input{
     padding: 1em;
     display:flex;
     flex-direction: column;
-    gap: 0.6em;
+    gap: 0.9em;
 }
 
 ion-icon{
