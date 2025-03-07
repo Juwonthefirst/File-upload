@@ -10,7 +10,7 @@
     <link rel='stylesheet' href='https://fonts.googleapis.com/css2?family=Poppins:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,100;1,200;1,300;1,400;1,500;1,600;1,700;1,800;1,900&amp;display=swap'>
     <link rel="stylesheet" href="../static/css/main.css" type="text/css" media="all" />
     <link rel="stylesheet" href="../static/css/signup.css" type="text/css" media="all" />
-    <title>Hive Cloud - Sign up</title>
+    <title>Some Archive- Sign up</title>
 </head>
 
 <body>
@@ -47,7 +47,7 @@
                         {{ form.email.label }}
                         <div class="input">
                             <ion-icon name="mail-outline"></ion-icon>
-                            {{ form.email }}
+                            {{ form.email(placeholder="example@some-archive.com"}}
                         </div>
                         {% for error in form.email.errors %}
                             <p>{{ error }}</p>
@@ -58,17 +58,30 @@
                         {{ form.email.label }}
                         <div class="input">
                             <ion-icon name="mail-outline"></ion-icon>
-                            {{ form.email }}
+                            {{ form.email(placeholder="example@some-archive.com) }}
                         </div>
                     </div>
                 {% endif %}
-                <div class="pass field">
-                    <label for="Password">Password</label>
-                    <div class="input">
-                        <ion-icon name="lock-closed-outline"></ion-icon>
-                        <input type="text" name="username" id="Username" />
+                {% if form.password.errors %}
+                    <div class="pass field error">
+                        {{ form.password.label }}
+                        <div class="input">
+                            <ion-icon name="lock-closed-outline"></ion-icon>
+                            {{ form.password(placeholder="********")}}
+                        </div>
+                        {% for error in form.password.errors %}
+                            <p>{{ error }}</p>
+                        {% endfor %}
                     </div>
-                </div>
+                {% else %}
+                    <div class="pass field">
+                        {{ form.password.label }}
+                        <div class="input">
+                            <ion-icon name="lock-closed-outline"></ion-icon>
+                            {{ form.password(placeholder="********")}}
+                        </div>
+                    </div>
+                {% endif %}
                 <div class="cpass field">
                     <label for="ConfirmPassword">Confirm Password</label>
                     <div class="input">
