@@ -77,7 +77,7 @@ input{
     gap: 2em;
 }
 
-.logo{
+.header{
     padding: 3em 0 3em;
     display: flex;
     flex-direction: column;
@@ -85,7 +85,7 @@ input{
     align-items: center;
 }
 
-.logo img{
+.header img{
     flex-direction: column;
     border-radius: 50%;
     width: 40%
