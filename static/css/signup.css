@@ -1,9 +1,20 @@
-.error{
+.field{
     border-color: red;
     color: red;
     animation: fadeout 0.5s linear 1000s forwards;
 }
 
 @keyframes fadeout{
-    
+    from{
+        color:red;
+        border-color: red;
+    }
+    to{
+        color: black;
+        border-color: whitesmoke;
+    }
+}
+
+.field:hover{
+    animation-delay: 0s;
 }
