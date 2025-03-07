@@ -47,7 +47,7 @@ def login_required(f):
 
 
 # routing function
-
+# add username/email login
 @app.route("/login", methods = ["GET", "POST"])
 def login():
 	form = LoginForm()
