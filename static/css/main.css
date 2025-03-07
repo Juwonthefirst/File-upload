@@ -43,7 +43,7 @@ input{
 
 .screen{
     position: relative;
-    background-color: #E8F9FF;
+    background-color: powderblue;
     padding: 2em;
     display:flex;
     flex-direction: column;
