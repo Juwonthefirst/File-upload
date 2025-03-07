@@ -21,7 +21,27 @@
         <form action="{{ request.path }}" method="post">
             {{ form.hidden_tag() }}
             <div class="form">
-             
+                <div class="user field">
+                    <label for="Username">Username</label>
+                    <div class="input">
+                        <ion-icon name="person-outline"></ion-icon>
+                        <input type="text" name="username" id="Username"/>
+                    </div>
+                </div>
+                <div class="email field">
+                    <label for="Email">Email</label>
+                    <div class="input">
+                        <ion-icon name="mail-outline"></ion-icon>
+                        <input type="text" name="Email" id="Email"/>
+                    </div>
+                </div>
+                <div class="pass field">
+                    <label for="Password">Password</label>
+                    <div class="input">
+                        <ion-icon name="mail-outline"></ion-icon>
+                        <input type="text" name="username" id="Username" />
+                    </div>
+             </div>
             </div>
         </form>
     </div>
