@@ -48,7 +48,7 @@ input{
     display:flex;
     flex-direction: column;
     border-radius: 2rem;
-    box-shadow: 0 0 2rem lightsteelblue;
+    box-shadow: 0 0 30px lightsteelblue;
     gap: 2em;
 }
 
@@ -56,7 +56,7 @@ input{
     
     background-color: white; 
     color: black;
-    box-shadow: 0 0 2em whitesmoke;
+    box-shadow: 4px 4px 12px rgba(0, 50, 100, 0.2);
     border-radius: 21px;
     border: .1em solid whitesmoke;
     padding: 1em;
@@ -75,9 +75,9 @@ ion-icon{
 }
 
 .submit:hover input,.field:hover{
-    border-color: lightblue;
-    color: lightblue;
-    box-shadow: 0 0 1em whitesmoke;
+    border-color: #1B263B;
+    color: #1B263B;
+    box-shadow: 0px 8px 20px rgba(0, 0, 0, 0.3);
 }
 
 
