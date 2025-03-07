@@ -4,7 +4,7 @@ from wtforms import StringField, PasswordField,BooleanField, SubmitField
 from wtforms.validators import Length, DataRequired,Email, EqualTo
 
 
-
+# class for login form
 class LoginForm(FlaskForm):
 	
 	username = StringField("Username", validators = [DataRequired(), Length(min = 3, max = 20)])
@@ -12,6 +12,8 @@ class LoginForm(FlaskForm):
 	remember = BooleanField("Remember me")
 	login = SubmitField("Login")
 	
+
+#class for signup form
 class SignupForm(FlaskForm):
 	
 	username = StringField("Username", validators = [DataRequired(), Length(min = 3, max = 20)])
@@ -21,7 +23,14 @@ class SignupForm(FlaskForm):
 	signup = SubmitField("Sign Up")
 	
 	
+	
+#class for form for uploading files
 class FileUpload(FlaskForm):
 	
 	file = FileField("File upload", validators = [FileRequired(),FileAllowed(["jpg", "png", "gif", "webp", "svg", "pdf", "docx", "xlsx", "pptx", "txt", "mp4", "mov", "avi", "mkv", "mp3", "wav", "ogg", "zip", "rar", "7z", "tar.gz"], "Filetype not supported, try putting it into a zip file then try again")])
 	upload = SubmitField("Upload")
+	
+	
+#class for form for uploading files
+class FileRetrieve(FlaskForm):
+	pass

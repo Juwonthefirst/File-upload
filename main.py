@@ -1,4 +1,4 @@
-from flask import Flask, render_template, redirect, url_for, flash, session
+from flask import Flask, request, render_template, redirect, url_for, flash, session
 from werkzeug.utils import secure_filename
 from datetime import timedelta
 from functools import wraps
@@ -50,11 +50,12 @@ def login_required(f):
 
 @app.route("/login", methods = ["GET", "POST"])
 def login():
-	error_dict = {}
 	form = LoginForm()
+	print(form.errors)
 	if form.validate_on_submit():
 		username = form.username.data
 		password = form.password.data
+		print(username)
 		user_info = db.session.execute(db.select(Users).where(Users.username == username)).scalar_one_or_none()
 		if user_info:
 			try:
@@ -64,10 +65,10 @@ def login():
 					session["email"] = user_info.email
 					return redirect(url_for("dashboard"))
 			except VerifyMismatchError:
-				error_dict["password_error"] = True
+				flash("incorrect username and password combination")
 		else:
-			error_dict["user_error"] = True			
-	return render_template("login.html", form=form, error=error_dict)
+			flash("incorrect username and password combination")			
+	return render_template("mock.html", form=form)
 
 
 @app.route("/signup", methods = ["GET", "POST"])
@@ -110,10 +111,12 @@ def dashboard():
 			file_location = f"{username}/{file_data.id}"
 			file_data.filelocation = file_location
 			if R2.upload(file, file_location):
-				pass #flash a message here
+				flash("Cloud upload successful", "success")
 			else:
-				pass #flash error message
+				flash("Something went wrong, try again later", "error")
 	else:
 		pass
 		
 	return render_template("home.html", upload = upload)
+	
+app.run(debug = True)

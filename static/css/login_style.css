@@ -94,8 +94,7 @@ input{
     color: black;
     box-shadow: 0 0 2em whitesmoke;
     border-radius: 21px;
-    border-bottom: .2em solid whitesmoke;
-    border-right: .1em solid whitesmoke;
+    border: .1em solid whitesmoke;
     padding: 1em;
     display:flex;
     flex-direction: column;
@@ -112,9 +111,9 @@ ion-icon{
 }
 
 .submit:hover input,.field:hover{
-    border-width: .1em .1em .2em .1em;
     border-color: lightblue;
     color: lightblue;
+    box-shadow: 0 0 1em whitesmoke;
 }
 
 
