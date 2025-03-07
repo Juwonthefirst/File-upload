@@ -68,7 +68,7 @@ def login():
 				flash("incorrect username and password combination")
 		else:
 			flash("incorrect username and password combination")			
-	return render_template("mock.html", form=form)
+	return render_template("login.html", form=form)
 
 
 @app.route("/signup", methods = ["GET", "POST"])
