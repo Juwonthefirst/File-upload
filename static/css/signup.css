@@ -1,4 +1,9 @@
 .error{
     border-color: red;
     color: red;
+    animation: fadeout 0.5s linear 1000s forwards;
+}
+
+@keyframes fadeout{
+    
 }
