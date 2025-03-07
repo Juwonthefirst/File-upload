@@ -47,7 +47,7 @@ def login_required(f):
 
 
 # routing function
-# add username/email login
+# add username/email login by accepting text then checking if its exists in the username or email database
 @app.route("/login", methods = ["GET", "POST"])
 def login():
 	form = LoginForm()
@@ -78,8 +78,8 @@ def signup():
 		username = form.username.data
 		email = form.email.data
 		password = form.password.data
-		username_exist = Users.Fetch("username", username)
-		email_exist = Users.Fetch("email", email)
+		username_exist = Users.fetch("username", username)
+		email_exist = Users.fetch("email", email)
 		if (not username_exist) and (not email_exist):
 			hashed_password = ph.hash(password)
 			new_user = Users(username = username, email = email, password = hashed_password)
@@ -89,9 +89,11 @@ def signup():
 			session["email"] = email
 			return redirect(url_for("dashboard"))
 		else:
-			potential_error = [username_exist, email_exist]
-			errors = [error for error in potential_error if error]
-	return render_template("signup.html", errors = errors,  form=form)
+			if username_exist: 
+			    form.username.errors.append("Username already in use")
+			if email_exist: 
+			    form.email.errors.append("Email already in use")
+	return render_template("signup.html",  form=form)
 	
 					
 @app.route("/dashboard/", methods = ["GET", "POST"])

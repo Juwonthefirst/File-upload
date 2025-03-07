@@ -1,4 +1,9 @@
+h2{
+    font-weight: 600;
+}
+
 .error{
     border-color: red;
     color: red;
 }
+
