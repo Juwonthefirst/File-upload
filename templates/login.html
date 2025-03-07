@@ -3,25 +3,61 @@
 
 <head>
     <meta charset="UTF-8">
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/login_styles.css' }}" type="text/css" media="all" />
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Login To Your Account</title>
+    <script type="module" src="https://unpkg.com/ionicons@5.5.2/dist/ionicons/ionicons.esm.js"></script>
+    <script nomodule src="https://unpkg.com/ionicons@5.5.2/dist/ionicons/ionicons.js"></script><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/normalize/5.0.0/normalize.min.css">
+    <script src="https://code.iconify.design/3/3.1.0/iconify.min.js"></script>
+    <link rel='stylesheet' href='https://fonts.googleapis.com/css2?family=Poppins:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,100;1,200;1,300;1,400;1,500;1,600;1,700;1,800;1,900&amp;display=swap'>
+    <link rel="stylesheet" href="../static/css/login_style.css" type="text/css" media="all" />
+    <title>Hive Cloud-Login</title>
 </head>
 
 <body>
-    <main>
-       <form action="{{ request.path }}" method="post">
-           {{ form.hidden_tag() }}
-           <fieldset>
-               <legend><span>Login to continue</span></legend>
-               <br>
-               <!{{ form.username.label(class="label username", placeholder="Enter your username....") }}
-               <br>
-               {{ form.username(placeholder="Enter your username....") }}
-               
-           </fieldset>
-       </form>
-    </main>
+    <div class="screen">
+        <div class="logo">
+            {% with messages=get_flashed_messages() %}
+                {% if messages %}
+                    {% for message in messages %}
+                        <div class="flash">
+                            <span class="iconify" data-icon="material-symbols:cancel-outline-rounded"></span>
+                            <p>{{ message }}</p>
+                        </div>
+                    {% endfor %}
+                {% endif %}
+            {% endwith %}
+            <img src="{{ url_for('static', filename='image/logo.jpeg') }}" alt="logo" />
+        </div>
+        <form action="{{ request.path }}" method="POST">
+            {{ form.hidden_tag() }}
+            <div class="form">
+                <div class="user field">
+                    {{ form.username.label }}
+                    <div class="input">
+                        <ion-icon name="person-outline"></ion-icon>
+                        {{ form.username(placeholder="Enter Username....") }}
+                    </div>
+                </div>
+                <div class="pass field">
+                    {{ form.password.label }}
+                    <div class="input">
+                        <ion-icon name="lock-closed-outline"></ion-icon>
+                        {{ form.password(placeholder="********") }}
+                    </div>
+                </div>
+                <div class="submit">
+                    {{ form.login }}
+                </div>
+            </div>
+        </form>
+        <div class="smalls">
+            <small class="Signup">
+                <a href="">Sign up</a>
+            </small>
+            <small class="forgot">
+                <a href="">Forgot Password?</a>
+            </small>
+        </div>
+    </div>
 </body>
 
 </html>
