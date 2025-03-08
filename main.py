@@ -67,7 +67,7 @@ def login():
 											"username" : username, 
 											"email" : user_info.email 
 											})
-					return redirect( next_page )
+					return redirect( next_page or url_for("dashboard"))
 			except VerifyMismatchError:
 				flash("incorrect username and password combination")
 		else:
