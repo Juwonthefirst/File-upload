@@ -28,6 +28,7 @@ app.config["SQLALCHEMY_DATABASE_URI"] = os.getenv("DATABASE_URL")
 app.config["SECRET_KEY"] = os.getenv("SECRET_KEY")
 app.permanent_session_lifetime = timedelta(days=1)
 
+
 #initializing other modules
 db.init_app(app)
 init_table(app)
@@ -40,6 +41,7 @@ def login_required(f):
 	@wraps(f)
 	def wrapped_function(*args, **kwargs):
 		if "username" not in session:
+			session["next_page"] = request.url
 			return redirect(url_for("login"))
 		return f(*args, **kwargs)
 	return wrapped_function
@@ -51,19 +53,21 @@ def login_required(f):
 def login():
 	form = LoginForm()
 	if form.validate_on_submit():
+		next_page = session["next_page"]
+		session.pop("next_page")
 		username = form.username.data
 		password = form.password.data
 		user_info = db.session.execute(db.select(Users).where(Users.username == username)).scalar_one_or_none()
 		if user_info:
 			try:
 				if ph.verify(user_info.password, password):
-				    session.permanent = True
+					session.permanent = True
 					session.update({
-									"id" : user_info.id,
-									"username" : username, 
-									"email" : user_info.email 
-									})
-					return redirect(url_for("dashboard"))
+											"id" : user_info.id,
+											"username" : username, 
+											"email" : user_info.email 
+											})
+					return redirect( next_page )
 			except VerifyMismatchError:
 				flash("incorrect username and password combination")
 		else:
@@ -86,10 +90,10 @@ def signup():
 			new_user.save()
 			session.permanent = True
 			session.update({
-							"id" : new_user.id,
-							"username" : username, 
-							"email" : email 
-							})
+											"id" : new_user.id,
+											"username" : username, 
+											"email" : email 
+											})
 			return redirect(url_for("dashboard"))
 		else:
 			if username_exist: 
@@ -110,8 +114,9 @@ def dashboard():
 		if upload.validate_on_submit():
 			file = upload.file.data
 			file_name = secure_filename(file.filename)
-			file_size = os.path.getsize(file)
-			file_data = Uploads(filename = file_name, filesize = file_size, filelocation = unknown, user_id = user_id)
+			file_size = len(file.read())
+			file.seek(0)
+			file_data = Uploads(filename = file_name, filesize = file_size, filelocation = "nill", user_id = user_id)
 			file_data.save()
 			file_location = f"{username}/{file_data.id}"
 			file_data.filelocation = file_location
@@ -123,5 +128,15 @@ def dashboard():
 		pass
 		
 	return render_template("home.html", upload = upload)
+
+@app.get("/session")
+@login_required
+def sessions():
+	return dict(session)
 	
+@app.route("/logout")
+@login_required
+def logout():
+	session.clear()
+	return redirect(url_for("login"))	
 app.run(debug = True)
