@@ -27,7 +27,7 @@ validate_env()
 app.config["SQLALCHEMY_DATABASE_URI"] = os.getenv("DATABASE_URL")
 app.config["SECRET_KEY"] = os.getenv("SECRET_KEY")
 app.permanent_session_lifetime = timedelta(days=1)
-
+session.permanent = True
 
 #initializing other modules
 db.init_app(app)
