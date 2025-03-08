@@ -59,9 +59,9 @@ def login():
 				if ph.verify(user_info.password, password):
 				    session.permanent = True
 					session.update({
-									"id" : new_user.id,
+									"id" : user_info.id,
 									"username" : username, 
-									"email" : new_user.email 
+									"email" : user_info.email 
 									})
 					return redirect(url_for("dashboard"))
 			except VerifyMismatchError:
