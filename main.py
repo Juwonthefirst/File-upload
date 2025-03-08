@@ -51,11 +51,9 @@ def login_required(f):
 @app.route("/login", methods = ["GET", "POST"])
 def login():
 	form = LoginForm()
-	print(form.errors)
 	if form.validate_on_submit():
 		username = form.username.data
 		password = form.password.data
-		print(username)
 		user_info = db.session.execute(db.select(Users).where(Users.username == username)).scalar_one_or_none()
 		if user_info:
 			try:
