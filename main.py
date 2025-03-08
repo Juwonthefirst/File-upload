@@ -58,9 +58,11 @@ def login():
 			try:
 				if ph.verify(user_info.password, password):
 				    session.permanent = True
-					session["username"] = username
-					session["id"] = user_info.id
-					session["email"] = user_info.email
+					session.update({
+									"id" : new_user.id,
+									"username" : username, 
+									"email" : new_user.email 
+									})
 					return redirect(url_for("dashboard"))
 			except VerifyMismatchError:
 				flash("incorrect username and password combination")
@@ -83,9 +85,11 @@ def signup():
 			new_user = Users(username = username, email = email, password = hashed_password)
 			new_user.save()
 			session.permanent = True
-			session["username"] = username
-			session["id"] = new_user.id
-			session["email"] = email
+			session.update({
+							"id" : new_user.id,
+							"username" : username, 
+							"email" : email 
+							})
 			return redirect(url_for("dashboard"))
 		else:
 			if username_exist: 
@@ -108,7 +112,7 @@ def dashboard():
 			file_name = secure_filename(file.filename)
 			file_size = os.path.getsize(file)
 			file_data = Uploads(filename = file_name, filesize = file_size, filelocation = unknown, user_id = user_id)
-			file_data.add()
+			file_data.save()
 			file_location = f"{username}/{file_data.id}"
 			file_data.filelocation = file_location
 			if R2.upload(file, file_location):
