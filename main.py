@@ -27,7 +27,6 @@ validate_env()
 app.config["SQLALCHEMY_DATABASE_URI"] = os.getenv("DATABASE_URL")
 app.config["SECRET_KEY"] = os.getenv("SECRET_KEY")
 app.permanent_session_lifetime = timedelta(days=1)
-session.permanent = True
 
 #initializing other modules
 db.init_app(app)
@@ -58,6 +57,7 @@ def login():
 		if user_info:
 			try:
 				if ph.verify(user_info.password, password):
+				    session.permanent = True
 					session["username"] = username
 					session["id"] = user_info.id
 					session["email"] = user_info.email
@@ -82,6 +82,7 @@ def signup():
 			hashed_password = ph.hash(password)
 			new_user = Users(username = username, email = email, password = hashed_password)
 			new_user.save()
+			session.permanent = True
 			session["username"] = username
 			session["id"] = new_user.id
 			session["email"] = email
