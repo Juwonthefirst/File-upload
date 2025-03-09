@@ -2,6 +2,7 @@ from flask_sqlalchemy import SQLAlchemy
 from sqlalchemy import Integer, String, DateTime, ForeignKey, Update
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 from sqlalchemy.sql import func
+from sqlalchemy.exc import IntegrityError
 from datetime import datetime
 from typing import List
 
@@ -16,17 +17,20 @@ class Users(db.Model):
 	email: Mapped[str] = mapped_column(String(20), unique = True, nullable = False)
 	password: Mapped[str] = mapped_column(String(20), nullable = False)
 	created_at: Mapped[datetime] = mapped_column(DateTime, server_default = func.now())
-	fileUploads:Mapped[List["Uploads"]] = relationship("Uploads", backref="uploader", lazy = True)
+	uploads:Mapped[List["Uploads"]] = relationship("Uploads", backref="uploader", lazy = "dynamic")
 	
 	
 	def __repr__(self):
 		return f"Users({self.username}, {self.email})"
-		
-	def add(self):
-		db.session.add(self)
-		db.session.commit()
-		return f"{self.username} successfully added to database"
-		
+	
+	def save(self):
+		try:
+			db.session.add(self)
+			db.session.commit()
+			return f"{self.username} successfully added to database"
+		except IntegrityError:
+			return False	
+			
 	def delete(self):
 		db.session.delete(self)
 		db.session.commit()
@@ -71,6 +75,7 @@ class Uploads(db.Model):
 	id:Mapped[int] = mapped_column(Integer, primary_key = True)
 	filename: Mapped[str] = mapped_column(String(255), nullable = False)
 	filesize:Mapped[int] = mapped_column(Integer, nullable = False)
+	folder:Mapped[str] = mapped_column(String(50), nullable = False)
 	filelocation:Mapped[str] = mapped_column(String(255), nullable = False, unique = True)
 	uploaded_at: Mapped[datetime] = mapped_column(DateTime, server_default = func.now())
 	user_id: Mapped[int] = mapped_column(db.ForeignKey("users.id"), nullable = False)
@@ -79,10 +84,13 @@ class Uploads(db.Model):
 	def __repr__(self):
 		return f"File({self.filename}, {self.filesize})"
 		
-	def add(self):
-		db.session.add(self)
-		db.session.commit()
-		return f"{self.filename} uploaded successfully"
+	def save(self):
+		try:
+			db.session.add(self)
+			db.session.commit()
+			return f"{self.filename} uploaded successfully"
+		except IntegrityError:
+			return False
 		
 	def delete(self):
 		db.session.delete(self)
