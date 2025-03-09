@@ -53,8 +53,8 @@ def login_required(f):
 def login():
 	form = LoginForm()
 	if form.validate_on_submit():
-		next_page = session["next_page"]
-		session.pop("next_page")
+		next_page = session.get("next_page")
+		session.pop("next_page", "None")
 		username = form.username.data
 		password = form.password.data
 		user_info = db.session.execute(db.select(Users).where(Users.username == username)).scalar_one_or_none()
@@ -67,7 +67,7 @@ def login():
 											"username" : username, 
 											"email" : user_info.email 
 											})
-					return redirect( next_page or url_for("dashboard"))
+					return redirect( next_page or url_for("home"))
 			except VerifyMismatchError:
 				flash("incorrect username and password combination")
 		else:
@@ -87,14 +87,16 @@ def signup():
 		if (not username_exist) and (not email_exist):
 			hashed_password = ph.hash(password)
 			new_user = Users(username = username, email = email, password = hashed_password)
-			new_user.save()
-			session.permanent = True
-			session.update({
-											"id" : new_user.id,
-											"username" : username, 
-											"email" : email 
-											})
-			return redirect(url_for("dashboard"))
+			if not new_user.save():
+				form.username.errors.append("Unknown error, Try logging in")
+			else:
+				session.permanent = True
+				session.update({
+												"id" : new_user.id,
+												"username" : username, 
+												"email" : email 
+												})
+				return redirect(url_for("home"))
 		else:
 			if username_exist: 
 			    form.username.errors.append("Username already in use")
@@ -102,11 +104,22 @@ def signup():
 			    form.email.errors.append("Email already in use")
 	return render_template("signup.html",  form=form)
 	
-					
-@app.route("/dashboard/", methods = ["GET", "POST"])
-@app.route("/", methods = ["GET", "POST"])
+
+@app.get("/")
 @login_required
-def dashboard():
+def home():
+	user_id = session.get("id")												
+	User = db.session.get(user_id)
+	folders = User.uploads.with_entities(Uploads.folder).distinct().all()
+	return render_template("home.html", folders = folders)
+	
+
+@app.get("/folders")
+
+
+@app.route("/upload", methods = ["GET", "POST"])
+@login_required
+def upload():
 	user_id = session["id"]
 	username = session["username"]
 	upload = FileUpload()
@@ -118,7 +131,7 @@ def dashboard():
 			file.seek(0)
 			file_data = Uploads(filename = file_name, filesize = file_size, filelocation = "nill", user_id = user_id)
 			file_data.save()
-			file_location = f"{username}/{file_data.id}"
+			file_location = f"{username}/{folder}/{file_data.id}"
 			file_data.filelocation = file_location
 			if R2.upload(file, file_location):
 				flash("Cloud upload successful", "success")
