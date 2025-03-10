@@ -15,9 +15,9 @@ class Users(db.Model):
 	id: Mapped[int] = mapped_column(Integer, primary_key = True)
 	username: Mapped[str] = mapped_column(String(20), unique = True, nullable = False)
 	email: Mapped[str] = mapped_column(String(20), unique = True, nullable = False)
-	password: Mapped[str] = mapped_column(String(20), nullable = False)
+	password: Mapped[str] = mapped_column(String(255), nullable = False)
 	created_at: Mapped[datetime] = mapped_column(DateTime, server_default = func.now())
-	uploads:Mapped[List["Uploads"]] = relationship("Uploads", backref="uploader", lazy = "dynamic")
+	uploads:Mapped[List["Uploads"]] = relationship("Uploads", backref="uploader", lazy = "dynamic", cascade = "all, delete-orphan")
 	
 	
 	def __repr__(self):
@@ -104,13 +104,16 @@ class Uploads(db.Model):
 		return f"{previous_filename} has been changed to {new_filename}"
 		
 		
-	# to fetch user details from the database			
+	# to fetch user uploads details from the database			
 	@classmethod		
-	def fetch(cls, area, user_detail, search = None):
-		if area in ["filename", "filelink"] and search in ["filename", "filelink", None]:
+	def fetch(cls, area, user_detail, search = None, all = False):
+		if area in ["filename", "folder", "user_id"] and search in ["filename", "folder", "user_id", None]:
 			if not search:
 				search = area
-			return db.session.execute( db.select(getattr(cls, area)).where(getattr(cls, search) == user_detail)).scalar_one()
+			if all:
+				return db.session.execute( db.select(getattr(cls, area)).order_by(getattr(cls, area)).where(getattr(cls, search) == user_detail)).scalars().all()
+			else:
+				return db.session.execute( db.select(getattr(cls, area)).where(getattr(cls, search) == user_detail)).scalar_one_or_none()
 		else:
 			raise TypeError("Incorrect value used in Fetch method")
 
