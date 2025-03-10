@@ -1,9 +1,7 @@
 import boto3
 from dotenv import load_dotenv
 import os
-from io import BytesIO
 from botocore.exceptions import ClientError
-from flask import send_file
 load_dotenv(".env")
 
 #checks if the eviroment variables are there
