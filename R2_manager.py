@@ -1,8 +1,9 @@
 import boto3
 from dotenv import load_dotenv
 import os
+from io import BytesIO
 from botocore.exceptions import ClientError
-
+from flask import send_file
 load_dotenv(".env")
 
 #checks if the eviroment variables are there
@@ -32,7 +33,7 @@ class R2:
 		
 		
 	@classmethod
-	def download(cls, stored_filename, expiration):
+	def view(cls, stored_filename, expiration):
 		try:
 			return cls.r2.generate_presigned_url(
 			"get_object",
@@ -48,3 +49,7 @@ class R2:
 	def delete(cls):
 		pass
 	
+	@classmethod
+	def get_file(cls, fileobject):
+		file_response = cls.r2.get_object(Bucket = cls.bucket, key = fileobject)
+		return file_response["Body"].read()
