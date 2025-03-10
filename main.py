@@ -1,4 +1,4 @@
-from flask import Flask, request, render_template, redirect, url_for, flash, session
+from flask import Flask, request, render_template, redirect, url_for, flash, session, send_file
 from werkzeug.utils import secure_filename
 from datetime import timedelta
 from functools import wraps
@@ -46,7 +46,7 @@ def login_required(f):
 		return f(*args, **kwargs)
 	return wrapped_function
 
- 
+
 # routing function
 # add username/email login by accepting text then checking if its exists in the username or email database
 @app.route("/login", methods = ["GET", "POST"])
@@ -123,6 +123,22 @@ def cloud(folder):
 	return render_template("home.html", files=files)
 	
 
+@app.get("/cloud/<string:folder>/<string:filename>/download")
+@login_required
+def download(folder, filename):
+	
+	stored_file = db.session.execute(
+	db.select(Uploads.filelocation).where(and_(Uploads.folder == folder, Uploads.filename == filename))
+	).scalar_one()
+	
+	response = R2.get_file(stored_file)
+	return send_file (
+		BytesIo(file_data),
+		download_name = filename,
+		as_attachment = True
+		)
+
+
 
 @app.route("/upload", methods = ["GET", "POST"])
 @login_required
@@ -130,23 +146,19 @@ def upload():
 	user_id = session["id"]
 	username = session["username"]
 	upload = FileUpload()
-	if request.method == "POST":
-		if upload.validate_on_submit():
-			file = upload.file.data
-			file_name = secure_filename(file.filename)
-			file_size = len(file.read())
-			file.seek(0)
-			file_data = Uploads(filename = file_name, filesize = file_size, filelocation = "nill", user_id = user_id)
-			file_data.save()
-			file_location = f"{username}/{folder}/{file_data.id}"
-			file_data.filelocation = file_location
-			if R2.upload(file, file_location):
-				flash("Cloud upload successful", "success")
-			else:
-				flash("Something went wrong, try again later", "error")
-	else:
-		pass
-		
+	if upload.validate_on_submit():
+		file = upload.file.data
+		file_name = secure_filename(file.filename)
+		file_size = len(file.read())
+		file.seek(0)
+		file_data = Uploads(filename = file_name, filesize = file_size, filelocation = "nill", user_id = user_id)
+		file_data.save()
+		file_location = f"{username}/{folder}/{file_data.id}"
+		file_data.filelocation = file_location
+		if R2.upload(file, file_location):
+			flash("Cloud upload successful", "success")
+		else:
+			flash("Something went wrong, try again later", "error")
 	return render_template("home.html", upload = upload)
 
 @app.get("/session")
