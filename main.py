@@ -46,7 +46,7 @@ def login_required(f):
 		return f(*args, **kwargs)
 	return wrapped_function
 
-
+ 
 # routing function
 # add username/email login by accepting text then checking if its exists in the username or email database
 @app.route("/login", methods = ["GET", "POST"])
@@ -79,6 +79,8 @@ def login():
 def signup():
 	form = SignupForm()
 	if form.validate_on_submit():
+		next_page = session.get("next_page")
+		session.pop("next_page", "None")
 		username = form.username.data
 		email = form.email.data
 		password = form.password.data
@@ -96,7 +98,7 @@ def signup():
 												"username" : username, 
 												"email" : email 
 												})
-				return redirect(url_for("home"))
+				return redirect(next_page or url_for("home"))
 		else:
 			if username_exist: 
 			    form.username.errors.append("Username already in use")
@@ -109,12 +111,17 @@ def signup():
 @login_required
 def home():
 	user_id = session.get("id")												
-	User = db.session.get(user_id)
-	folders = User.uploads.with_entities(Uploads.folder).distinct().all()
-	return render_template("home.html", folders = folders)
+	folders = Uploads.fetch("folder", user_id, search = "user_id", all = True)
+	return render_template("home.html", folders = list(dict.fromkeys(folders)))
 	
 
-@app.get("/folders")
+@app.get("/cloud/<string:folder>")
+@login_required
+def cloud(folder):
+	user_id = session.get("id")
+	files = Uploads.fetch("filename", folder, search = "folder", all = True)
+	return render_template("home.html", files=files)
+	
 
 
 @app.route("/upload", methods = ["GET", "POST"])
