@@ -9,6 +9,7 @@ from dotenv import load_dotenv
 import os
 from MyDBAlchemy import db, Users, Uploads, init_table
 from R2_manager import R2
+from io import BytesIO
 # loading and validating variables
 load_dotenv(".env")
 
