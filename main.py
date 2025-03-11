@@ -1,6 +1,6 @@
 from flask import Flask, request, render_template, redirect, url_for, flash, session, send_file
 from werkzeug.utils import secure_filename
-from datetime import timedelta
+from datetime import timedelta, datetime
 from functools import wraps
 from argon2 import PasswordHasher
 from argon2.exceptions import VerifyMismatchError
@@ -10,6 +10,7 @@ import os
 from MyDBAlchemy import db, Users, Uploads, init_table
 from R2_manager import R2
 from io import BytesIO
+import jwt
 # loading and validating variables
 load_dotenv(".env")
 
@@ -28,7 +29,7 @@ validate_env()
 app.config["SQLALCHEMY_DATABASE_URI"] = os.getenv("DATABASE_URL")
 app.config["SECRET_KEY"] = os.getenv("SECRET_KEY")
 app.permanent_session_lifetime = timedelta(days=1)
-
+jwt_key = os.getenv("SECRET_KEY")
 
 #initializing other modules
 db.init_app(app)
@@ -123,23 +124,69 @@ def cloud(folder):
 	files = Uploads.fetch("filename", folder, search = "folder", all = True)
 	return render_template("home.html", files=files)
 	
-
+# route for downloading files
 @app.get("/cloud/<string:folder>/<string:filename>/download")
 @login_required
-def download(folder, filename):
-	
+def download(folder, filename, user_id = None):
+	if not user_id:
+		user_id = session.get("id")
 	stored_file = db.session.execute(
-	db.select(Uploads.filelocation).where(and_(Uploads.folder == folder, Uploads.filename == filename))
-	).scalar_one()
+		db.select(Uploads.filelocation).where(
+			and_(
+					Uploads.folder == folder, 
+					Uploads.filename == filename,
+					Uploads.user_id == user_id
+					)
+				) 
+			).scalar_one()
 	
 	response = R2.get_file(stored_file)
 	return send_file (
-		BytesIo(file_data),
+		BytesIO(file_data),
 		download_name = filename,
 		as_attachment = True
 		)
 
 
+@app.get("/cloud/<string:folder>/<string:filename>/share")
+@login_required
+def share(folder, filename):
+	user_id = session.get("id")
+	link = " "
+	if form.validate_on_submit():
+		token = jwt.encode (
+			{
+				"folder" : folder, 
+				"filename" : filename, 
+				"sender_id" : user_id, 
+				"recipient_id":  recievers,
+				"exp" : datetime.utcnow() + timedelta(hours = 1) 
+			},
+			 jwt_key, 
+			 algorithm = "HS256"
+		)
+		share_link = url_for("shared", token = token)
+	return render_template("cloud_share.html" link = sharelink)
+
+
+@app.get("/shared/<token>")
+@login_required
+def shared(token):
+	user_id = session.get("id")
+	try:
+		file_data = jwt.decode(token, jwt_key, algorithm = "HS256")
+	except jwt.ExpiredSignatureError:
+		flash("Expired Url")
+	except jwt.InvalidTokenError:
+		flash("Invalid link")
+	if (user_id in file_data.get("recipient_id")) or (file_data.get("receipitent_id")):
+		folder = file_data.get("folder")
+		filename = file_data.get("filename")
+		sender_id = file_data.get("sender_id")
+		return download(folder, filename, user_id = sender_id)
+	else:
+		flash("Access denied")
+	
 
 @app.route("/upload", methods = ["GET", "POST"])
 @login_required
