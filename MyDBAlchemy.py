@@ -1,10 +1,11 @@
 from flask_sqlalchemy import SQLAlchemy
-from sqlalchemy import Integer, String, DateTime, ForeignKey, Update
+from sqlalchemy import Integer, String, DateTime, Text, ForeignKey, Update
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 from sqlalchemy.sql import func
 from sqlalchemy.exc import IntegrityError
 from datetime import datetime
 from typing import List
+import traceback
 
 db = SQLAlchemy()
 
@@ -14,7 +15,7 @@ class Users(db.Model):
 	
 	id: Mapped[int] = mapped_column(Integer, primary_key = True)
 	username: Mapped[str] = mapped_column(String(20), unique = True, nullable = False)
-	email: Mapped[str] = mapped_column(String(20), unique = True, nullable = False)
+	email: Mapped[str] = mapped_column(String(255), unique = True, nullable = False)
 	password: Mapped[str] = mapped_column(String(255), nullable = False)
 	created_at: Mapped[datetime] = mapped_column(DateTime, server_default = func.now())
 	uploads:Mapped[List["Uploads"]] = relationship("Uploads", backref="uploader", lazy = "dynamic", cascade = "all, delete-orphan")
@@ -120,9 +121,27 @@ class Uploads(db.Model):
 		else:
 			raise TypeError("Incorrect value used in Fetch method")
 
- 				
-  				
-def init_table(app):   #function to create table
+ 
+ #table class for storing error logs				
+class Errors(db.Model):
+	id: Mapped[int] = mapped_column(Integer, primary_key = True)
+	error: Mapped[str] = mapped_column(String(255), nullable = False)
+	details: Mapped[str] = mapped_column(Text, nullable = False, default = traceback.format_exc())
+	time: Mapped[datetime] = mapped_column(DateTime, server_default = func.now())
+	user_id: Mapped[int] = mapped_column(db.ForeignKey("users.id"))
+	
+	
+	def __repr__(self):
+		return f"{error} for user {user_id} during {time}"
+	
+	def log(self):
+		db.session.add(self)
+		db.session.commit()
+		return "Error logged"
+ 		
+ 		
+ #function to create table if they don't exist 				
+def init_table(app):   
 	with app.app_context():
 		db.create_all()
 	return "Table Created"

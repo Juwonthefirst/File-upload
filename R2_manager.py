@@ -1,7 +1,8 @@
 import boto3
 from dotenv import load_dotenv
 import os
-from botocore.exceptions import ClientError
+from botocore.exceptions import ClientError, ParamValidationError, EndpointConnectionError
+from boto3.exceptions import S3UploadFailedError
 load_dotenv(".env")
 
 #checks if the eviroment variables are there
@@ -25,7 +26,7 @@ class R2:
 	def upload(cls, file, stored_filename):
 		try:
 			cls.r2.upload_fileobj(file, cls.bucket, stored_filename)
-		except ClientError:
+		except (EndpointConnectionError, TimeoutError, S3UploadFailedError):
 			return False
 		return True
 		
@@ -40,14 +41,23 @@ class R2:
 				"Key": stored_filename,
 				"ResponseContentDisposition": "attachment"},
 			ExpiresIn=expiration)
-		except ClientError:
+		except (EndpointConnectionError, TimeoutError, S3UploadFailedError):
 			return False
 			
 	@classmethod
-	def delete(cls):
-		pass
+	def delete(cls, filelocation):
+		try:
+			cls.r2.delete_object(Bucket = cls.bucket, Key = filelocation)
+		except (EndpointConnectionError, TimeoutError, S3UploadFailedError):
+			return False
 	
 	@classmethod
 	def get_file(cls, fileobject):
-		file_response = cls.r2.get_object(Bucket = cls.bucket, key = fileobject)
-		return file_response["Body"].read()
+		try:
+			file_response = cls.r2.get_object(Bucket = cls.bucket, key = fileobject)
+			return file_response["Body"].read()
+		except (EndpointConnectionError, TimeoutError, S3UploadFailedError):
+			return False
+		except ClientError as e:
+			if e.response["Error"]["Code"] == "404":
+				return "File not found"
