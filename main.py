@@ -7,10 +7,14 @@ from argon2.exceptions import VerifyMismatchError
 from form import LoginForm, SignupForm, FileUpload
 from dotenv import load_dotenv
 import os
-from MyDBAlchemy import db, Users, Uploads, init_table
+from MyDBAlchemy import db, Users, Uploads, Errors, init_table
+from sqlalchemy import and_, or_
 from R2_manager import R2
 from io import BytesIO
 import jwt
+from flask_caching import Cache
+
+
 # loading and validating variables
 load_dotenv(".env")
 
@@ -24,8 +28,6 @@ def validate_env():
 # flask configuration settings
 app=Flask(__name__)
 validate_env()
-
-
 app.config["SQLALCHEMY_DATABASE_URI"] = os.getenv("DATABASE_URL")
 app.config["SECRET_KEY"] = os.getenv("SECRET_KEY")
 app.permanent_session_lifetime = timedelta(days=1)
@@ -35,7 +37,7 @@ jwt_key = os.getenv("SECRET_KEY")
 db.init_app(app)
 init_table(app)
 ph = PasswordHasher()
-
+cache = Cache(app, config = {"CACHE_TYPE" : "simple"})
 
 
 # wrapper to restrict access to login necessary areas
@@ -53,54 +55,65 @@ def login_required(f):
 # add username/email login by accepting text then checking if its exists in the username or email database
 @app.route("/login", methods = ["GET", "POST"])
 def login():
-	form = LoginForm()
-	if form.validate_on_submit():
+	try:
 		next_page = session.get("next_page")
-		session.pop("next_page", "None")
-		username = form.username.data
-		password = form.password.data
-		user_info = db.session.execute(db.select(Users).where(Users.username == username)).scalar_one_or_none()
-		if user_info:
-			try:
-				if ph.verify(user_info.password, password):
-					session.permanent = True
-					session.update({
-											"id" : user_info.id,
-											"username" : username, 
-											"email" : user_info.email 
-											})
-					return redirect( next_page or url_for("home"))
-			except VerifyMismatchError:
+		if "id" in session:
+			return redirect(url_for("home"))
+		form = LoginForm()
+		if form.validate_on_submit():
+			username = form.username.data.capitalize().strip()
+			password = form.password.data.strip()
+			user_info = db.session.execute(db.select(Users).where(or_(Users.username == username, Users.email == username))).scalar_one_or_none()
+			if user_info:
+				try:
+					if ph.verify(user_info.password, password):
+						session.pop("next_page", "None")
+						session.permanent = True
+						session.update({
+												"id" : user_info.id,
+												"username" : username, 
+												"email" : user_info.email 
+												})
+						return redirect( next_page or url_for("home"))
+				except VerifyMismatchError:
+					flash("incorrect username and password combination")
+			else:
 				flash("incorrect username and password combination")
-		else:
-			flash("incorrect username and password combination")			
+	except Exception as err:
+		Errors(error = err).log()			
 	return render_template("login.html", form=form)
 
 
 @app.route("/signup", methods = ["GET", "POST"])
 def signup():
 	form = SignupForm()
+	if "id" in session:
+		return redirect(url_for("home"))
 	if form.validate_on_submit():
 		next_page = session.get("next_page")
 		session.pop("next_page", "None")
-		username = form.username.data
-		email = form.email.data
-		password = form.password.data
+		username = form.username.data.strip().capitalize()
+		email = form.email.data.strip().lower()
+		password = form.password.data.strip()
 		username_exist = Users.fetch("username", username)
 		email_exist = Users.fetch("email", email)
 		if (not username_exist) and (not email_exist):
 			hashed_password = ph.hash(password)
 			new_user = Users(username = username, email = email, password = hashed_password)
-			if not new_user.save():
-				form.username.errors.append("Unknown error, Try logging in")
-			else:
-				session.permanent = True
-				session.update({
-												"id" : new_user.id,
-												"username" : username, 
-												"email" : email 
-												})
-				return redirect(next_page or url_for("home"))
+			try:
+				if not new_user.save():
+					form.username.errors.append("Unknown error, Try logging in")
+				else:
+					session.permanent = True
+					session.update({
+													"id" : new_user.id,
+													"username" : username, 
+													"email" : email 
+													})
+					#if not cache.get("sign up"):
+					return redirect(next_page or url_for("home"))
+			except Exception as err:
+				Errors(error = err).log()
 		else:
 			if username_exist: 
 			    form.username.errors.append("Username already in use")
@@ -138,11 +151,21 @@ def download(folder, filename, user_id = None):
 					Uploads.user_id == user_id
 					)
 				) 
-			).scalar_one()
+			).scalar_one_or_none()
 	
-	response = R2.get_file(stored_file)
+	
+	try:
+		response = R2.get_file(stored_file)
+	except Exception as err:
+		Errors(error = err, user_id = session.get("id")).log()
+		response = None
+		flash("Something went wrong, please try again later")
+		
+	if not response:
+		flash("File not found")
+		return redirect(url_for("cloud", folder = folder))
 	return send_file (
-		BytesIO(file_data),
+		BytesIO(response),
 		download_name = filename,
 		as_attachment = True
 		)
@@ -152,9 +175,9 @@ def download(folder, filename, user_id = None):
 @login_required
 def share(folder, filename):
 	user_id = session.get("id")
-	link = " "
+	share_link = " "
 	if form.validate_on_submit():
-		token = jwt.encode (
+		token = jwt.encode(
 			{
 				"folder" : folder, 
 				"filename" : filename, 
@@ -162,11 +185,11 @@ def share(folder, filename):
 				"recipient_id":  recievers,
 				"exp" : datetime.utcnow() + timedelta(hours = 1) 
 			},
-			 jwt_key, 
+			 jwt_key,
 			 algorithm = "HS256"
 		)
 		share_link = url_for("shared", token = token)
-	return render_template("cloud_share.html" link = sharelink)
+	return render_template("cloud_share.html", link = share_link)
 
 
 @app.get("/shared/<token>")
@@ -176,16 +199,19 @@ def shared(token):
 	try:
 		file_data = jwt.decode(token, jwt_key, algorithm = "HS256")
 	except jwt.ExpiredSignatureError:
-		flash("Expired Url")
+		return render_template("Shared.html", error = "Expired Link")
 	except jwt.InvalidTokenError:
-		flash("Invalid link")
-	if (user_id in file_data.get("recipient_id")) or (file_data.get("receipitent_id")):
+		return render_template("Shared.html", error = "Invalid Link")
+	except Exception as err:
+		Errors(error = err, user_id = session.get("id")).log()
+		
+	if (user_id in file_data.get("recipient_id")) or (not file_data.get("recipient_id")):
 		folder = file_data.get("folder")
 		filename = file_data.get("filename")
 		sender_id = file_data.get("sender_id")
 		return download(folder, filename, user_id = sender_id)
 	else:
-		flash("Access denied")
+		return render_template("Shared.html", error = "Access Denied")
 	
 
 @app.route("/upload", methods = ["GET", "POST"])
@@ -203,10 +229,15 @@ def upload():
 		file_data.save()
 		file_location = f"{username}/{folder}/{file_data.id}"
 		file_data.filelocation = file_location
-		if R2.upload(file, file_location):
-			flash("Cloud upload successful", "success")
-		else:
-			flash("Something went wrong, try again later", "error")
+		try:
+			if R2.upload(file, file_location):
+				flash("Cloud upload successful", "success")
+			else:
+				flash("Unable to connect to the cloud", "error")
+		except Exception as err:
+			Errors(error = err, user_id = user_id).log()
+			flash("Something went wrong, please try again later", "error")
+			
 	return render_template("home.html", upload = upload)
 
 @app.get("/session")
@@ -218,5 +249,30 @@ def sessions():
 @login_required
 def logout():
 	session.clear()
-	return redirect(url_for("login"))	
+	return redirect(url_for("login"))
+		
 app.run(debug = True)
+
+""" 
+Forms to create
+1. Profile
+2. Cloud share(send)
+3. Upload area
+4. Cloud share(recieve)
+ 
+Forms to rework (reason)
+1.Signup form (
+							to allow for better login experience, like
+							email verification
+							space for full name
+							multi page signup
+							
+							)
+2. LoginForm(
+							add remember me field
+							allow login with username or email
+						)
+						
+	
+Rework filename to be safe for web and urls instead of filesystem
+"""
