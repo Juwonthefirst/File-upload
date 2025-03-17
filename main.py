@@ -6,14 +6,13 @@ from argon2 import PasswordHasher
 from argon2.exceptions import VerifyMismatchError
 from form import LoginForm, SignupForm, FileUpload
 from dotenv import load_dotenv
+from magic import Magic
 import os
 from MyDBAlchemy import db, Users, Uploads, Errors, init_table
-from sqlalchemy import and_, or_
+from sqlalchemy import or_
 from R2_manager import R2
 from io import BytesIO
 import jwt
-from flask_caching import Cache
-
 
 # loading and validating variables
 load_dotenv(".env")
@@ -37,8 +36,7 @@ jwt_key = os.getenv("SECRET_KEY")
 db.init_app(app)
 init_table(app)
 ph = PasswordHasher()
-cache = Cache(app, config = {"CACHE_TYPE" : "simple"})
-
+mime = Magic()
 
 # wrapper to restrict access to login necessary areas
 def login_required(f):
@@ -51,6 +49,16 @@ def login_required(f):
 	return wrapped_function
 
 
+# check mime type of the file
+def check_mime(file):
+	file_allowed = ["jpg", "png", "gif", "webp", "svg", "pdf", "docx", "xlsx", "pptx", "txt", "mp4", "mov", "avi", "mkv", "mp3", "wav", "ogg", "zip", "rar", "7z", "tar.gz"]
+	mime = mime.frombuffer(file.read(2048))
+	file.seek(0)
+	type = mime.split("/")[-1]
+	if type in file_allowed:
+		return mime
+	else:
+		return False
 # routing function
 # add username/email login by accepting text then checking if its exists in the username or email database
 @app.route("/login", methods = ["GET", "POST"])
@@ -71,7 +79,7 @@ def login():
 						session.permanent = True
 						session.update({
 												"id" : user_info.id,
-												"username" : username, 
+												"username" : user_info.username, 
 												"email" : user_info.email 
 												})
 						return redirect( next_page or url_for("home"))
@@ -93,7 +101,7 @@ def signup():
 		next_page = session.get("next_page")
 		session.pop("next_page", "None")
 		username = form.username.data.strip().capitalize()
-		email = form.email.data.strip().lower()
+		email = form.email.data.strip().capitalize()
 		password = form.password.data.strip()
 		username_exist = Users.fetch("username", username)
 		email_exist = Users.fetch("email", email)
@@ -110,7 +118,6 @@ def signup():
 													"username" : username, 
 													"email" : email 
 													})
-					#if not cache.get("sign up"):
 					return redirect(next_page or url_for("home"))
 			except Exception as err:
 				Errors(error = err).log()
@@ -143,25 +150,15 @@ def cloud(folder):
 def download(folder, filename, user_id = None):
 	if not user_id:
 		user_id = session.get("id")
-	stored_file = db.session.execute(
-		db.select(Uploads.filelocation).where(
-			and_(
-					Uploads.folder == folder, 
-					Uploads.filename == filename,
-					Uploads.user_id == user_id
-					)
-				) 
-			).scalar_one_or_none()
-	
-	
+	file_location = Uploads.fetch_filelocation(user_id, folder, filename)	
 	try:
-		response = R2.get_file(stored_file)
+		response = R2.get_file(file_location)
 	except Exception as err:
 		Errors(error = err, user_id = session.get("id")).log()
 		response = None
 		flash("Something went wrong, please try again later")
 		
-	if not response:
+	if  response == "File not found":
 		flash("File not found")
 		return redirect(url_for("cloud", folder = folder))
 	return send_file (
@@ -171,6 +168,29 @@ def download(folder, filename, user_id = None):
 		)
 
 
+@app.get("/cloud/<string:folder>/<string:filename>/delete")
+@login_required
+def delete(folder, filename):
+	user_id = session.get("id")
+	file_location = Uploads.fetch_filelocation(user_id, folder, filename)
+	try:
+		if R2.delete(file_location):
+			flash(f"{filename} removed from your cloud", "success")
+			return redirect(url_for("cloud", folder = folder))
+	except Exception as err:
+		Errors(error = err, user_id = user_id).log()
+		flash("Unable to connect to your cloud", "error")
+		return redirect(url_for("cloud", folder = folder))
+	
+	
+@app.get("/cloud/<string:folder>/<string:filename>/preview")
+@login_required
+def preview(folder, filename):	
+	user_id = session.get("id")
+	
+	if 
+	
+	
 @app.get("/cloud/<string:folder>/<string:filename>/share")
 @login_required
 def share(folder, filename):
@@ -182,7 +202,7 @@ def share(folder, filename):
 				"folder" : folder, 
 				"filename" : filename, 
 				"sender_id" : user_id, 
-				"recipient_id":  recievers,
+				"recipients":  recievers,
 				"exp" : datetime.utcnow() + timedelta(hours = 1) 
 			},
 			 jwt_key,
@@ -196,6 +216,7 @@ def share(folder, filename):
 @login_required
 def shared(token):
 	user_id = session.get("id")
+	username = session.get("username")
 	try:
 		file_data = jwt.decode(token, jwt_key, algorithm = "HS256")
 	except jwt.ExpiredSignatureError:
@@ -203,16 +224,16 @@ def shared(token):
 	except jwt.InvalidTokenError:
 		return render_template("Shared.html", error = "Invalid Link")
 	except Exception as err:
-		Errors(error = err, user_id = session.get("id")).log()
+		Errors(error = err, user_id = user_id).log()
 		
-	if (user_id in file_data.get("recipient_id")) or (not file_data.get("recipient_id")):
+	if (username in file_data.get("recipients")) or (not file_data.get("recipients")):
 		folder = file_data.get("folder")
 		filename = file_data.get("filename")
 		sender_id = file_data.get("sender_id")
 		return download(folder, filename, user_id = sender_id)
 	else:
 		return render_template("Shared.html", error = "Access Denied")
-	
+
 
 @app.route("/upload", methods = ["GET", "POST"])
 @login_required
@@ -275,4 +296,4 @@ Forms to rework (reason)
 						
 	
 Rework filename to be safe for web and urls instead of filesystem
-"""#
+"""
