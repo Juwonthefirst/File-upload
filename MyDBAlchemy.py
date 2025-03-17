@@ -1,5 +1,5 @@
 from flask_sqlalchemy import SQLAlchemy
-from sqlalchemy import Integer, String, DateTime, Text, ForeignKey, Update
+from sqlalchemy import Integer, String, DateTime, Text, ForeignKey, Update, and_
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 from sqlalchemy.sql import func
 from sqlalchemy.exc import IntegrityError
@@ -22,7 +22,7 @@ class Users(db.Model):
 	
 	
 	def __repr__(self):
-		return f"Users({self.username}, {self.email})"
+		return f"Users({self.username}, {self.email}, {self.created_at})"
 	
 	def save(self):
 		try:
@@ -38,24 +38,27 @@ class Users(db.Model):
 		return f"{self.username} successfully deleted from database"
 		
 	@classmethod
-	def update_name(cls, previous_username, new_username):
-		db.session.execute(Update(cls).where(cls.username == previous_username).values(username = new_username))
+	def update_name(cls, user_id, new_name):
+		user = db.session.get(cls, user_id)
+		user.name = new_name
 		db.session.commit()
-		return f"{previous_username} has been changed to {new_username}"
+		return f"Name has been changed to {new_username}"
 		
 	
 	@classmethod
-	def update_email(cls, previous_email, new_email):
-		db.session.execute(Update(cls).where(cls.email == previous_email).values(email = new_email))
+	def update_email(cls, user_id, new_email):
+		user = db.session.get(cls, user_id)
+		user.email = new_email
 		db.session.commit()
-		return f"{previous_email} has been changed to {new_email}"
+		return f" Email has been changed to {new_email}"
 		
 		
 	@classmethod
-	def update_pass(cls, username, new_pass):
-		db.session.execute(Update(cls).where(cls.username == username).values(password = new_pass))
+	def update_pass(cls,user_id, new_pass):
+		user = db.session.get(cls, user_id)
+		user.password = new_pass
 		db.session.commit()
-		return f"{username} password updated"
+		return f"{user.username} password updated"
 		
 		
 	# to fetch user details from the database			
@@ -78,8 +81,10 @@ class Uploads(db.Model):
 	filesize:Mapped[int] = mapped_column(Integer, nullable = False)
 	folder:Mapped[str] = mapped_column(String(50), nullable = False)
 	filelocation:Mapped[str] = mapped_column(String(255), nullable = False, unique = True) 
+	content_type:Mapped[str] = mapped_column(String(20), nullable=False)
 	uploaded_at: Mapped[datetime] = mapped_column(DateTime, server_default = func.now())
 	user_id: Mapped[int] = mapped_column(db.ForeignKey("users.id"), nullable = False)
+	
 	__table_args__ = (
 	db.UniqueConstraint("folder", "filename", name = "unique_file_in_folder"),
 	db.UniqueConstraint("user_id", "folder", name = "unique_folder_per_user")
@@ -121,6 +126,20 @@ class Uploads(db.Model):
 		else:
 			raise TypeError("Incorrect value used in Fetch method")
 
+
+	@classmethod
+	def fetch_filelocation(cls, user_id, folder, filename):
+		return db.session.execute(
+		db.select(cls.filelocation).where(
+			and_(
+					cls.folder == folder, 
+					cls.filename == filename,
+					cls.user_id == user_id
+					)
+				) 
+			).scalar_one_or_none()
+			
+			
  
  #table class for storing error logs				
 class Errors(db.Model):

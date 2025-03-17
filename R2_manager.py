@@ -32,14 +32,14 @@ class R2:
 		
 		
 	@classmethod
-	def view(cls, stored_filename, expiration):
+	def view(cls, filelocation, expiration):
 		try:
 			return cls.r2.generate_presigned_url(
 			"get_object",
 			Params={
 				"Bucket": cls.bucket,
-				"Key": stored_filename,
-				"ResponseContentDisposition": "attachment"},
+				"Key": filelocation,
+				"ResponseContentDisposition": "inline"},
 			ExpiresIn=expiration)
 		except (EndpointConnectionError, TimeoutError, S3UploadFailedError):
 			return False
@@ -48,13 +48,14 @@ class R2:
 	def delete(cls, filelocation):
 		try:
 			cls.r2.delete_object(Bucket = cls.bucket, Key = filelocation)
+			return True
 		except (EndpointConnectionError, TimeoutError, S3UploadFailedError):
 			return False
 	
 	@classmethod
-	def get_file(cls, fileobject):
+	def get_file(cls, filelocation):
 		try:
-			file_response = cls.r2.get_object(Bucket = cls.bucket, key = fileobject)
+			file_response = cls.r2.get_object(Bucket = cls.bucket, key = filelocation)
 			return file_response["Body"].read()
 		except (EndpointConnectionError, TimeoutError, S3UploadFailedError):
 			return False
