@@ -81,7 +81,7 @@ class Uploads(db.Model):
 	filesize:Mapped[int] = mapped_column(Integer, nullable = False)
 	folder:Mapped[str] = mapped_column(String(50), nullable = False)
 	filelocation:Mapped[str] = mapped_column(String(255), nullable = False, unique = True) 
-	content_type:Mapped[str] = mapped_column(String(20), nullable=False)
+	content_type:Mapped[str] = mapped_column(String(255), nullable=False)
 	uploaded_at: Mapped[datetime] = mapped_column(DateTime, server_default = func.now())
 	user_id: Mapped[int] = mapped_column(db.ForeignKey("users.id"), nullable = False)
 	
@@ -107,10 +107,11 @@ class Uploads(db.Model):
 		return f"{self.filename} deleted successfully"
 		
 	@classmethod
-	def update_name(cls, previous_filename, new_filename):
-		db.session.execute(Update(cls).where(cls.filename == previous_filename).values(filename = new_filename))
+	def update_name(cls, user_id, new_filename):
+		upload = db.session.get(cls, user_id)
+		upload.filename = new_filename
 		db.session.commit()
-		return f"{previous_filename} has been changed to {new_filename}"
+		return f"{upload.filename} password updated"
 		
 		
 	# to fetch user uploads details from the database			
@@ -128,9 +129,9 @@ class Uploads(db.Model):
 
 
 	@classmethod
-	def fetch_filelocation(cls, user_id, folder, filename):
+	def fetch_filerow(cls, user_id, folder, filename):
 		return db.session.execute(
-		db.select(cls.filelocation).where(
+		db.select(cls).where(
 			and_(
 					cls.folder == folder, 
 					cls.filename == filename,

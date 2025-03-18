@@ -50,7 +50,7 @@ def login_required(f):
 
 
 # check mime type of the file
-def check_mime(file):
+def get_mime(file):
 	file_allowed = ["jpg", "png", "gif", "webp", "svg", "pdf", "docx", "xlsx", "pptx", "txt", "mp4", "mov", "avi", "mkv", "mp3", "wav", "ogg", "zip", "rar", "7z", "tar.gz"]
 	mime = mime.frombuffer(file.read(2048))
 	file.seek(0)
@@ -150,7 +150,8 @@ def cloud(folder):
 def download(folder, filename, user_id = None):
 	if not user_id:
 		user_id = session.get("id")
-	file_location = Uploads.fetch_filelocation(user_id, folder, filename)	
+	file_row = Uploads.fetch_filerow(user_id, folder, filename)	
+	file_location = file_row.filelocation
 	try:
 		response = R2.get_file(file_location)
 	except Exception as err:
@@ -172,7 +173,8 @@ def download(folder, filename, user_id = None):
 @login_required
 def delete(folder, filename):
 	user_id = session.get("id")
-	file_location = Uploads.fetch_filelocation(user_id, folder, filename)
+	file_row = Uploads.fetch_filerow(user_id, folder, filename)	
+	file_location = file_row.filelocation
 	try:
 		if R2.delete(file_location):
 			flash(f"{filename} removed from your cloud", "success")
@@ -187,8 +189,8 @@ def delete(folder, filename):
 @login_required
 def preview(folder, filename):	
 	user_id = session.get("id")
-	
-	if 
+	file_row = Uploads.fetch_filerow(user_id, folder, filename)
+	file_type = file_row.content_type
 	
 	
 @app.get("/cloud/<string:folder>/<string:filename>/share")
@@ -243,21 +245,32 @@ def upload():
 	upload = FileUpload()
 	if upload.validate_on_submit():
 		file = upload.file.data
-		file_name = secure_filename(file.filename)
-		file_size = len(file.read())
-		file.seek(0)
-		file_data = Uploads(filename = file_name, filesize = file_size, filelocation = "nill", user_id = user_id)
-		file_data.save()
-		file_location = f"{username}/{folder}/{file_data.id}"
-		file_data.filelocation = file_location
-		try:
-			if R2.upload(file, file_location):
-				flash("Cloud upload successful", "success")
-			else:
-				flash("Unable to connect to the cloud", "error")
-		except Exception as err:
-			Errors(error = err, user_id = user_id).log()
-			flash("Something went wrong, please try again later", "error")
+		mime_type = get_mime(file)
+		if mime_type:
+			file_name = secure_filename(file.filename)
+			file_size = len(file.read())
+			file.seek(0)
+			file_data = Uploads(
+													filename = file_name, 
+													filesize = file_size,
+													folder = folder,
+													filelocation = "nill", 
+													content_type = mime_type, 
+													user_id = user_id
+												)
+			file_data.save()
+			file_location = f"{username}/{folder}/{file_data.id}"
+			file_data.filelocation = file_location
+			try:
+				if R2.upload(file, file_location):
+					flash("Cloud upload successful", "success")
+				else:
+					flash("Unable to connect to the cloud", "error")
+			except Exception as err:
+				Errors(error = err, user_id = user_id).log()
+				flash("Something went wrong, please try again later", "error")
+		else:
+			flash("File type not supported")
 			
 	return render_template("home.html", upload = upload)
 
