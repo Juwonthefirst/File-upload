@@ -1,27 +1,19 @@
 from flask import Flask, request, render_template, redirect, url_for, flash, session, send_file
 from werkzeug.utils import secure_filename
 from datetime import timedelta, datetime
-from functools import wraps
 from argon2 import PasswordHasher
 from argon2.exceptions import VerifyMismatchError
 from form import LoginForm, SignupForm, FileUpload
 from dotenv import load_dotenv
-from magic import Magic
-import os
 from MyDBAlchemy import db, Users, Uploads, Errors, init_table
+from helper_functions import login_required, validate_env, validate_mime
 from sqlalchemy import or_
 from R2_manager import R2
 from io import BytesIO
-import jwt
+import jwt, os
 
-# loading and validating variables
+# loading variables
 load_dotenv(".env")
-
-def validate_env():
-	variables = ["SECRET_KEY", "DATABASE_URL"]
-	for var in variables:
-		if not os.getenv(var):
-			raise RuntimeError(f"{var} is not set, check your enviroment variable")
 			
 
 # flask configuration settings
@@ -36,29 +28,9 @@ jwt_key = os.getenv("SECRET_KEY")
 db.init_app(app)
 init_table(app)
 ph = PasswordHasher()
-mime = Magic()
-
-# wrapper to restrict access to login necessary areas
-def login_required(f):
-	@wraps(f)
-	def wrapped_function(*args, **kwargs):
-		if "username" not in session:
-			session["next_page"] = request.url
-			return redirect(url_for("login"))
-		return f(*args, **kwargs)
-	return wrapped_function
 
 
-# check mime type of the file
-def get_mime(file):
-	file_allowed = ["jpg", "png", "gif", "webp", "svg", "pdf", "docx", "xlsx", "pptx", "txt", "mp4", "mov", "avi", "mkv", "mp3", "wav", "ogg", "zip", "rar", "7z", "tar.gz"]
-	mime = mime.frombuffer(file.read(2048))
-	file.seek(0)
-	type = mime.split("/")[-1]
-	if type in file_allowed:
-		return mime
-	else:
-		return False
+
 # routing function
 # add username/email login by accepting text then checking if its exists in the username or email database
 @app.route("/login", methods = ["GET", "POST"])
@@ -188,16 +160,29 @@ def delete(folder, filename):
 @app.get("/cloud/<string:folder>/<string:filename>/preview")
 @login_required
 def preview(folder, filename):	
-	user_id = session.get("id")
-	file_row = Uploads.fetch_filerow(user_id, folder, filename)
-	file_type = file_row.content_type
+	try:
+		allowed_mime = ["image", "video", "audio"]
+		user_id = session.get("id")
+		file_row = Uploads.fetch_filerow(user_id, folder, filename)
+		file_type = file_row.content_type
+		file_location = file_row.filelocation
+		for mime in allowed_mime:
+			if file_type.startswith(mime):
+				url = R2.preview(file_location, 3600)
+				if not url:
+					flash("Unable to connect to your cloud")
+					return redirect(url_for("cloud", folder = folder))
+	except Exception as err:
+		Errors(error = err, user_id = user_id).log()
+		return redirect(url_for("cloud", folder = folder))
+	return render_template ("preview.html", type = mime,url = url)
 	
 	
 @app.get("/cloud/<string:folder>/<string:filename>/share")
 @login_required
 def share(folder, filename):
 	user_id = session.get("id")
-	share_link = " "
+	share_link = "Click SHARE to get your file link"
 	if form.validate_on_submit():
 		token = jwt.encode(
 			{
@@ -245,7 +230,7 @@ def upload():
 	upload = FileUpload()
 	if upload.validate_on_submit():
 		file = upload.file.data
-		mime_type = get_mime(file)
+		mime_type = validate_mime(file)
 		if mime_type:
 			file_name = secure_filename(file.filename)
 			file_size = len(file.read())
@@ -310,3 +295,7 @@ Forms to rework (reason)
 	
 Rework filename to be safe for web and urls instead of filesystem
 """
+
+#check mime type with filetye and puremagic 
+#set file limit
+#allow one account per device
