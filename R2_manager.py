@@ -32,7 +32,7 @@ class R2:
 		
 		
 	@classmethod
-	def view(cls, filelocation, expiration):
+	def preview(cls, filelocation, expiration):
 		try:
 			return cls.r2.generate_presigned_url(
 			"get_object",
