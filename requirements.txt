@@ -12,3 +12,4 @@ PyJWT==2.10.1
 filetype==1.2.0
 puremagic==1.28
 resend==2.6.0
+Flask-Mail==0.10.0
