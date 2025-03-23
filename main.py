@@ -3,10 +3,10 @@ from werkzeug.utils import secure_filename
 from datetime import timedelta, datetime
 from argon2 import PasswordHasher
 from argon2.exceptions import VerifyMismatchError
-from form import LoginForm, SignupForm, FileUpload
+from form import LoginForm, SignupPage1, SignupPage2, SignupPage3, FileUpload
 from dotenv import load_dotenv
 from MyDBAlchemy import db, Users, Uploads, Errors, init_table
-from helper_functions import login_required, validate_mime
+from helper_functions import login_required, validate_mime, send_mail, verify_otp, current_signup_page
 from sqlalchemy import or_
 from R2_manager import R2
 from io import BytesIO
@@ -41,12 +41,11 @@ def login():
 				try:
 					if ph.verify(user_info.password, password):
 						file_sizes = Uploads.fetch("filesize", user_info.id, search = "user_id", all = True)
-						session.pop("next_page", "None")
+						session.pop("next_page", None)
 						session.permanent = True
 						session.update({
 												"id": user_info.id,
-												"username": user_info.username, 
-												"email": user_info.email,
+												"username": user_info.username,
 												"total_file_size": sum(file_sizes)
 												})
 						return redirect( next_page or url_for("home"))
@@ -59,41 +58,93 @@ def login():
 	return render_template("login.html", form=form)
 
 
-@app.route("/signup", methods = ["GET", "POST"])
-def signup():
-	form = SignupForm()
+@app.route("/signup/user-info", methods = ["GET", "POST"])
+@current_signup_page
+def signup1():
+	if "id" in session:
+		return redirect(url_for("home"))
+	form = SignupPage1()
+	if form.validate_on_submit():
+		first_name = form.first_name.data.strip().capitalize()
+		last_name = form.last_name.data.strip().capitalize()
+		email = form.email.data.strip().capitalize()
+		email_exist = Users.fetch("email", email)
+		if not email_exist:
+			session.permanent = True
+			session.update({
+											"first_name": first_name,
+											"last_name": last_name,
+											"email": email,
+											"current_page": 2	
+											})
+			return redirect(url_for("signup2"))
+		else:
+			form.email.errors.append("Email already in use")
+	return render_template("signup(page_1).html",  form=form)
+
+	
+@app.route("/signup/verify", methods = ["GET", "POST"])
+@current_signup_page
+def signup2():
+	if "id" in session:
+		return redirect(url_for("home"))
+	send_mail(app, session.get("email"))
+	form = SignupPage2()
+	if form.validate_on_submit():
+		otp = form.otp.data
+		response = verify_otp(otp)
+		match (response):
+			case "verified":
+				session["current_page"] = 3
+				return redirect(url_for("signup3"))
+				break
+			case "expired":
+				flash("Expired OTP, request a new one")
+				break
+			case "invalid":
+				flash("Invalid OTP, check and try again later")
+				break
+			case None:
+				flash("Something went wrong, try again later")
+	return render_template("signup(page_2).html",  form=form)
+
+@app.route("/signup/finish", methods = ["GET", "POST"])
+@current_signup_page
+def signup3():
+	form = SignupPage3()
 	if "id" in session:
 		return redirect(url_for("home"))
 	if form.validate_on_submit():
 		next_page = session.get("next_page")
-		session.pop("next_page", "None")
 		username = form.username.data.strip().capitalize()
-		email = form.email.data.strip().capitalize()
 		password = form.password.data.strip()
 		username_exist = Users.fetch("username", username)
-		email_exist = Users.fetch("email", email)
-		if (not username_exist) and (not email_exist):
+		if not username_exist:
 			hashed_password = ph.hash(password)
-			new_user = Users(username = username, email = email, password = hashed_password)
+			new_user = Users(
+												username = username,
+												firstname = session.get("first_name"), 
+												lastname = session.get("last_name"), 
+												email = session.get("email"),
+												password = hashed_password
+												)
 			try:
 				if not new_user.save():
 					form.username.errors.append("Unknown error, Try logging in")
 				else:
+					session.clear()
 					session.permanent = True
 					session.update({
 													"id" : new_user.id,
 													"username" : username, 
-													"email" : email 
+													"total_file_size": 0
 													})
 					return redirect(next_page or url_for("home"))
 			except Exception as err:
 				Errors(error = err).log()
 		else:
-			if username_exist: 
-			    form.username.errors.append("Username already in use")
-			if email_exist: 
-			    form.email.errors.append("Email already in use")
-	return render_template("signup.html",  form=form)
+			form.username.errors.append("Username already in use")
+	return render_template("signup(page_3).html",  form=form)
 	
 
 @app.get("/")
