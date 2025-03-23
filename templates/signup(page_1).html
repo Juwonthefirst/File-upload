@@ -16,38 +16,57 @@
 <body>
     <div class="screen">
         <div class="greeting">
-            <h2>Welcome to Some Archive, Sign in to continue</h2>
+            <h2>Welcome to Cloud archive! Sign up to get started</h2>
         </div>
-        <form action="{{ request.path }}" method="post">
+        <form action="" method="POST">
             {{ form.hidden_tag() }}
             <div class="form">
-                {% if form.username.errors %}
+                {% if form.firstname.errors %}
                     <div class="user field error">
-                        {{ form.username.label }}
+                        {{ form.firstname.label }}
                         <div class="input">
                             <ion-icon name="person-outline"></ion-icon>
-                            {{ form.username(placeholder="Pick a Username....")}}
+                            {{ form.firstname(placeholder="John")}}
                         </div>
-                        {% for error in form.username.errors %}
+                        {% for error in form.firstname.errors %}
                             <p>{{ error }}</p>
                         {% endfor %}
                     </div>
                 {% else %}
-                
                     <div class="user field">
-                        {{ form.username.label }}
+                        {{ form.firstname.label }}
                         <div class="input">
                             <ion-icon name="person-outline"></ion-icon>
-                            {{ form.username(placeholder="Pick a Username.....")}}
+                            {{ form.firstname(placeholder="John")}}
                         </div>
                     </div>
+                {% endif %}
+                {% if form.lastname.errors %}
+                   <div class="user field error">
+                       {{ form.lastname.label }}
+                        <div class="input">
+                           <ion-icon name="person-outline"></ion-icon>
+                           {{ form.lastname(placeholder="Doe")}}
+                        </div>
+                            {% for error in form.lastname.errors %}
+                                <p>{{ error }}</p>
+                            {% endfor %}
+                        </div>
+                {% else %}
+                    <div class="user field">
+                        {{ form.lastname.label }}
+                        <div class="input">
+                            <ion-icon name="person-outline"></ion-icon>
+                            {{ form.lastname(placeholder="Doe")}}
+                        </div>
+                   </div>
                 {% endif %}
                 {% if form.email.errors %}
                     <div class="email field error">
                         {{ form.email.label }}
                         <div class="input">
                             <ion-icon name="mail-outline"></ion-icon>
-                            {{ form.email(placeholder="example@some-archive.com")}}
+                            {{ form.email(placeholder="johndoe@some-archive.com")}}
                         </div>
                         {% for error in form.email.errors %}
                             <p>{{ error }}</p>
@@ -58,47 +77,7 @@
                         {{ form.email.label }}
                         <div class="input">
                             <ion-icon name="mail-outline"></ion-icon>
-                            {{ form.email(placeholder="example@some-archive.com") }}
-                        </div>
-                    </div>
-                {% endif %}
-                {% if form.password.errors %}
-                    <div class="pass field error">
-                        {{ form.password.label }}
-                        <div class="input">
-                            <ion-icon name="lock-closed-outline"></ion-icon>
-                            {{ form.password(placeholder="********")}}
-                        </div>
-                        {% for error in form.password.errors %}
-                            <p>{{ error }}</p>
-                        {% endfor %}
-                    </div>
-                {% else %}
-                    <div class="pass field">
-                        {{ form.password.label }}
-                        <div class="input">
-                            <ion-icon name="lock-closed-outline"></ion-icon>
-                            {{ form.password(placeholder="********")}}
-                        </div>
-                    </div>
-                {% endif %}
-                {% if form.c_password.errors %}
-                    <div class="c_pass field error">
-                        {{ form.c_password.label }}
-                        <div class="input">
-                            <ion-icon name="lock-closed-outline"></ion-icon>
-                            {{ form.c_password(placeholder="********")}}
-                        </div>
-                        {% for error in form.c_password.errors %}
-                            <p>{{ error }}</p>
-                        {% endfor %}
-                    </div>
-                {% else %}
-                    <div class="pass field">
-                        {{ form.c_password.label }}
-                        <div class="input">
-                            <ion-icon name="lock-closed-outline"></ion-icon>
-                            {{ form.c_password(placeholder="********")}}
+                            {{ form.email(placeholder="johndoe@some-archive.com") }}
                         </div>
                     </div>
                 {% endif %}
