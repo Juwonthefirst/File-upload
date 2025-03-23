@@ -3,13 +3,15 @@ from dotenv import load_dotenv
 import os
 from botocore.exceptions import ClientError, ParamValidationError, EndpointConnectionError
 from boto3.exceptions import S3UploadFailedError
+from helper_functions import validate_env
+
+
 load_dotenv(".env")
 
 #checks if the eviroment variables are there
 variables = ["ACCESS_KEY", "R2_SECRET_KEY", "ACCOUNT_ID", "BUCKET_NAME"]
-for var in variables:
-	if not os.getenv(var):
-		raise RuntimeError(f"{var} is not set, check your enviroment variable")
+
+validate_env(variables)
 
 #class to interact with cloudfare r2
 class R2:

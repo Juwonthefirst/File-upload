@@ -1,10 +1,12 @@
 import os, filetype, puremagic
 from functools import wraps
 from flask import session, request, redirect, url_for
+from flask_mail import Mail, Message
+from datetime import datetime, timedelta
+import random
 
 #validating env
-def validate_env():
-	variables = ["SECRET_KEY", "DATABASE_URL"]
+def validate_env(variables):
 	for var in variables:
 		if not os.getenv(var):
 			raise RuntimeError(f"{var} is not set, check your enviroment variable")
@@ -62,3 +64,45 @@ def validate_mime(file):
 		return mime_type
 	else:
 		return None
+		
+#function generating a one time password
+def get_otp():
+	otp = random.randint(100000, 999999)
+	session["otp"] = {
+									"code": otp,
+									 "expires_in": datetime.utcnow() + timedelta(minutes = 10) 
+								}
+	return otp
+
+#function for sending mail through flask-mail	
+def send_mail(app, receiver):
+	try:
+		mail = Mail(app)
+		otp = get_otp()
+		message = Message(
+												subject = "Password Change Request",
+												recipients = [ receiver ]
+											)
+		message.body = f"""
+		You made a request to change your password. To change your password use the code below 
+		                  {otp}
+		 if you didn't make this request, You can ignore this email and take proper measures to properly secure your account
+"""
+		mail.send(message)
+		return "Email Sent"
+	except Exception as err:
+		print("Error")
+		return None
+
+
+def verify_otp(otp):
+	current_time = datetime.utcnow()
+	stored_otp = session.get("otp")
+	stored_otp_code = stored_otp.get("code")
+	otp_expiration_time = stored_otp.get("expires_in")
+	session.pop("otp", None)
+	if otp == stored_otp_code:
+		if current_time > otp_expiration_time:
+			return "verified"
+		return "OTP is expired"
+	return "Invalid OTP"

@@ -14,6 +14,8 @@ db = SQLAlchemy()
 class Users(db.Model):
 	
 	id: Mapped[int] = mapped_column(Integer, primary_key = True)
+	firstname: Mapped[str] = mapped_column(String(60), nullable = False)
+	lastname: Mapped[str] = mapped_column(String(60), nullable = False)
 	username: Mapped[str] = mapped_column(String(20), unique = True, nullable = False)
 	email: Mapped[str] = mapped_column(String(255), unique = True, nullable = False)
 	password: Mapped[str] = mapped_column(String(255), nullable = False)
@@ -117,7 +119,7 @@ class Uploads(db.Model):
 	# to fetch user uploads details from the database			
 	@classmethod		
 	def fetch(cls, area, user_detail, search = None, all = False):
-		if area in ["filename", "folder", "user_id"] and search in ["filename", "folder", "user_id", None]:
+		if area in ["filename", "folder", "user_id", "filesize"] and search in ["filename", "folder", "user_id", None]:
 			if not search:
 				search = area
 			if all:
