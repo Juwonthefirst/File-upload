@@ -15,9 +15,23 @@ def validate_env(variables):
 def login_required(f):
 	@wraps(f)
 	def wrapped_function(*args, **kwargs):
-		if "username" not in session:
+		if "current_page" in session:
+			page = session.get("current_page")
+			return redirect(url_for(f"signup{page}"))
+		elif "username" not in session:
 			session["next_page"] = request.url
 			return redirect(url_for("login"))
+		return f(*args, **kwargs)
+	return wrapped_function
+	
+	
+#wrapper to redirect to current signup page
+def current_signup_page(f):
+	@wraps(f)
+	def wrapped_function(*args, **kwargs):
+		if "current_page" in session:
+			page = session.get("current_page")
+			return redirect(url_for(f"signup{page}"))
 		return f(*args, **kwargs)
 	return wrapped_function
 	
@@ -31,7 +45,7 @@ def get_filetype_mimetype(file):
 #get mime from puremagic
 def get_puremagic_mimetype(file):
 	try:
-		return puremagic.from_stream(file, mime = True) or None
+		return puremagic.from_stream(file, mime = True)
 	except puremagic.main.PureError:
 		return None
 
@@ -91,18 +105,23 @@ def send_mail(app, receiver):
 		mail.send(message)
 		return "Email Sent"
 	except Exception as err:
-		print("Error")
+		print(err)
 		return None
 
 
 def verify_otp(otp):
-	current_time = datetime.utcnow()
-	stored_otp = session.get("otp")
-	stored_otp_code = stored_otp.get("code")
-	otp_expiration_time = stored_otp.get("expires_in")
-	session.pop("otp", None)
-	if otp == stored_otp_code:
-		if current_time > otp_expiration_time:
-			return "verified"
-		return "OTP is expired"
-	return "Invalid OTP"
+	try:
+		current_time = datetime.utcnow()
+		stored_otp = session.get("otp")
+		stored_otp_code = stored_otp.get("code")
+		otp_expiration_time = stored_otp.get("expires_in")
+		if otp == stored_otp_code:
+			session.pop("otp", None)
+			if current_time > otp_expiration_time:
+				return "verified"
+			return "expired"
+		return "Invalid"
+	except Exception as err:
+		print(err)
+		return None
+		
