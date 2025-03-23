@@ -6,29 +6,22 @@ from argon2.exceptions import VerifyMismatchError
 from form import LoginForm, SignupForm, FileUpload
 from dotenv import load_dotenv
 from MyDBAlchemy import db, Users, Uploads, Errors, init_table
-from helper_functions import login_required, validate_env, validate_mime
+from helper_functions import login_required, validate_mime
 from sqlalchemy import or_
 from R2_manager import R2
 from io import BytesIO
-import jwt, os
-
-# loading variables
-load_dotenv(".env")
-			
+import jwt
 
 # flask configuration settings
 app=Flask(__name__)
-validate_env()
-app.config["SQLALCHEMY_DATABASE_URI"] = os.getenv("DATABASE_URL")
-app.config["SECRET_KEY"] = os.getenv("SECRET_KEY")
+app.config.from_pyfile("config.py")
 app.permanent_session_lifetime = timedelta(days=1)
-jwt_key = os.getenv("SECRET_KEY")
 
 #initializing other modules
 db.init_app(app)
 init_table(app)
 ph = PasswordHasher()
-
+jwt_key = app.config.get("SECRET_KEY")
 
 
 # routing function
@@ -47,12 +40,14 @@ def login():
 			if user_info:
 				try:
 					if ph.verify(user_info.password, password):
+						file_sizes = Uploads.fetch("filesize", user_info.id, search = "user_id", all = True)
 						session.pop("next_page", "None")
 						session.permanent = True
 						session.update({
-												"id" : user_info.id,
-												"username" : user_info.username, 
-												"email" : user_info.email 
+												"id": user_info.id,
+												"username": user_info.username, 
+												"email": user_info.email,
+												"total_file_size": sum(file_sizes)
 												})
 						return redirect( next_page or url_for("home"))
 				except VerifyMismatchError:
@@ -258,6 +253,16 @@ def upload():
 			flash("File type not supported")
 			
 	return render_template("home.html", upload = upload)
+	
+@app.get("/profile")
+@login_required
+def profile():
+	return render_template("profile.html")
+	
+@app.route("/profile/settings")
+@login_required
+def settings():
+	return render_template("settings.html")
 
 @app.get("/session")
 @login_required
@@ -270,7 +275,7 @@ def logout():
 	session.clear()
 	return redirect(url_for("login"))
 		
-app.run(debug = True)
+app.run(debug = True, host="0.0.0.0")
 
 """ 
 Forms to create
@@ -289,13 +294,11 @@ Forms to rework (reason)
 							)
 2. LoginForm(
 							add remember me field
-							allow login with username or email
 						)
 						
 	
 Rework filename to be safe for web and urls instead of filesystem
 """
 
-#check mime type with filetye and puremagic 
 #set file limit
 #allow one account per device
