@@ -16,9 +16,9 @@
 <body>
     <div class="screen">
         <div class="greeting">
-            <h2>Welcome to Some Archive, Sign in to continue</h2>
+            <h2>Almost done, just pick a username and choose a password to continue</h2>
         </div>
-        <form action="{{ request.path }}" method="post">
+        <form action="" method="post">
             {{ form.hidden_tag() }}
             <div class="form">
                 {% if form.username.errors %}
@@ -26,39 +26,18 @@
                         {{ form.username.label }}
                         <div class="input">
                             <ion-icon name="person-outline"></ion-icon>
-                            {{ form.username(placeholder="Pick a Username....")}}
+                            {{ form.username(placeholder="Choose a Username....")}}
                         </div>
                         {% for error in form.username.errors %}
                             <p>{{ error }}</p>
                         {% endfor %}
                     </div>
                 {% else %}
-                
                     <div class="user field">
                         {{ form.username.label }}
                         <div class="input">
                             <ion-icon name="person-outline"></ion-icon>
-                            {{ form.username(placeholder="Pick a Username.....")}}
-                        </div>
-                    </div>
-                {% endif %}
-                {% if form.email.errors %}
-                    <div class="email field error">
-                        {{ form.email.label }}
-                        <div class="input">
-                            <ion-icon name="mail-outline"></ion-icon>
-                            {{ form.email(placeholder="example@some-archive.com")}}
-                        </div>
-                        {% for error in form.email.errors %}
-                            <p>{{ error }}</p>
-                        {% endfor %}
-                    </div>
-                {% else %}
-                    <div class="email field">
-                        {{ form.email.label }}
-                        <div class="input">
-                            <ion-icon name="mail-outline"></ion-icon>
-                            {{ form.email(placeholder="example@some-archive.com") }}
+                            {{ form.username(placeholder="Choose a Username.....")}}
                         </div>
                     </div>
                 {% endif %}
