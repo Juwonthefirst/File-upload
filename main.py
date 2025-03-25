@@ -6,7 +6,7 @@ from argon2.exceptions import VerifyMismatchError
 from form import LoginForm, SignupPage1, SignupPage2, SignupPage3, FileUpload
 from dotenv import load_dotenv
 from MyDBAlchemy import db, Users, Uploads, Errors, init_table
-from helper_functions import login_required, validate_mime, send_mail, verify_otp, current_signup_page
+from helper_functions import login_required, validate_mime, send_mail, verify_otp, current_page
 from sqlalchemy import or_
 from R2_manager import R2
 from io import BytesIO
@@ -27,11 +27,10 @@ jwt_key = app.config.get("SECRET_KEY")
 # routing function
 # add username/email login by accepting text then checking if its exists in the username or email database
 @app.route("/login", methods = ["GET", "POST"])
+#@current_page
 def login():
 	try:
 		next_page = session.get("next_page")
-		if "id" in session:
-			return redirect(url_for("home"))
 		form = LoginForm()
 		if form.validate_on_submit():
 			username = form.username.data.capitalize().strip()
@@ -54,15 +53,13 @@ def login():
 			else:
 				flash("incorrect username and password combination")
 	except Exception as err:
-		Errors(error = err).log()			
+		Errors(error = str(err)).log()			
 	return render_template("login.html", form=form)
 
 
 @app.route("/signup/user-info", methods = ["GET", "POST"])
-@current_signup_page
+#@current_page
 def signup1():
-	if "id" in session:
-		return redirect(url_for("home"))
 	form = SignupPage1()
 	if form.validate_on_submit():
 		first_name = form.first_name.data.strip().capitalize()
@@ -74,46 +71,50 @@ def signup1():
 			session.update({
 											"first_name": first_name,
 											"last_name": last_name,
-											"email": email,
-											"current_page": 2	
+											"email": email
 											})
-			return redirect(url_for("signup2"))
+			return redirect(url_for("send_otp"))
 		else:
 			form.email.errors.append("Email already in use")
 	return render_template("signup(page_1).html",  form=form)
 
-	
+@app.get("/signup/otp")
+#@current_page
+def send_otp():
+	if "email" not in session:
+		return redirect(url_for("signup1"))
+	response = send_mail(app, session.get("email"))
+	if response == "Email sent":
+		return redirect(url_for("signup2"))
+	Errors(error = str(response)).log()
+	return flash("Something went wrong, try again later")
+				
+			
 @app.route("/signup/verify", methods = ["GET", "POST"])
-@current_signup_page
+#@current_page
 def signup2():
-	if "id" in session:
-		return redirect(url_for("home"))
-	send_mail(app, session.get("email"))
 	form = SignupPage2()
 	if form.validate_on_submit():
 		otp = form.otp.data
 		response = verify_otp(otp)
 		match (response):
 			case "verified":
-				session["current_page"] = 3
+				session["email_verified"] = True
 				return redirect(url_for("signup3"))
-				break
 			case "expired":
 				flash("Expired OTP, request a new one")
-				break
 			case "invalid":
 				flash("Invalid OTP, check and try again later")
-				break
-			case None:
+			case _:
 				flash("Something went wrong, try again later")
+				Errors(error = str(response)).log()
+		
 	return render_template("signup(page_2).html",  form=form)
 
 @app.route("/signup/finish", methods = ["GET", "POST"])
-@current_signup_page
+#@current_page
 def signup3():
 	form = SignupPage3()
-	if "id" in session:
-		return redirect(url_for("home"))
 	if form.validate_on_submit():
 		next_page = session.get("next_page")
 		username = form.username.data.strip().capitalize()
@@ -141,7 +142,9 @@ def signup3():
 													})
 					return redirect(next_page or url_for("home"))
 			except Exception as err:
-				Errors(error = err).log()
+				print(err)
+				Errors(error = str(err)).log()
+				flash("Something went wrong, please try again")
 		else:
 			form.username.errors.append("Username already in use")
 	return render_template("signup(page_3).html",  form=form)
@@ -173,7 +176,7 @@ def download(folder, filename, user_id = None):
 	try:
 		response = R2.get_file(file_location)
 	except Exception as err:
-		Errors(error = err, user_id = session.get("id")).log()
+		Errors(error = str(err), user_id = session.get("id")).log()
 		response = None
 		flash("Something went wrong, please try again later")
 		
@@ -198,7 +201,7 @@ def delete(folder, filename):
 			flash(f"{filename} removed from your cloud", "success")
 			return redirect(url_for("cloud", folder = folder))
 	except Exception as err:
-		Errors(error = err, user_id = user_id).log()
+		Errors(error = str(err), user_id = user_id).log()
 		flash("Unable to connect to your cloud", "error")
 		return redirect(url_for("cloud", folder = folder))
 	
@@ -219,7 +222,7 @@ def preview(folder, filename):
 					flash("Unable to connect to your cloud")
 					return redirect(url_for("cloud", folder = folder))
 	except Exception as err:
-		Errors(error = err, user_id = user_id).log()
+		Errors(error = str(err), user_id = user_id).log()
 		return redirect(url_for("cloud", folder = folder))
 	return render_template ("preview.html", type = mime,url = url)
 	
@@ -257,7 +260,7 @@ def shared(token):
 	except jwt.InvalidTokenError:
 		return render_template("Shared.html", error = "Invalid Link")
 	except Exception as err:
-		Errors(error = err, user_id = user_id).log()
+		Errors(error = str(err), user_id = user_id).log()
 		
 	if (username in file_data.get("recipients")) or (not file_data.get("recipients")):
 		folder = file_data.get("folder")
@@ -298,7 +301,7 @@ def upload():
 				else:
 					flash("Unable to connect to the cloud", "error")
 			except Exception as err:
-				Errors(error = err, user_id = user_id).log()
+				Errors(error = str(err), user_id = user_id).log()
 				flash("Something went wrong, please try again later", "error")
 		else:
 			flash("File type not supported")
@@ -316,7 +319,7 @@ def settings():
 	return render_template("settings.html")
 
 @app.get("/session")
-@login_required
+#@login_required
 def sessions():
 	return dict(session)
 	

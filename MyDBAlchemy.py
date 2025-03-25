@@ -150,7 +150,7 @@ class Errors(db.Model):
 	error: Mapped[str] = mapped_column(String(255), nullable = False)
 	details: Mapped[str] = mapped_column(Text, nullable = False, default = traceback.format_exc())
 	time: Mapped[datetime] = mapped_column(DateTime, server_default = func.now())
-	user_id: Mapped[int] = mapped_column(db.ForeignKey("users.id"))
+	user_id: Mapped[int] = mapped_column(db.ForeignKey("users.id"), nullable = True)
 	
 	
 	def __repr__(self):

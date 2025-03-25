@@ -4,7 +4,7 @@ from wtforms import StringField, PasswordField,BooleanField, SubmitField, Intege
 from wtforms.validators import Length, DataRequired,Email, EqualTo, Regexp, InputRequired
 
 def validate_length(form, field):
-	if len(str(form.data)) != 6:
+	if len(str(field.data)) != 6:
 		raise ValidationError("OTP should be only 6 digits")
 
 # class for login form
@@ -18,8 +18,8 @@ class LoginForm(FlaskForm):
 
 #class for signup form page 1
 class SignupPage1(FlaskForm):
-	first_name = StringField("First Name", validators = [Datarequired(), Length(min = 2, max = 60)])
-	last_name = StringField("Last Name", validators = [Datarequired(), Length(min = 2, max = 60)])
+	first_name = StringField("First Name", validators = [DataRequired(), Length(min = 2, max = 60)])
+	last_name = StringField("Last Name", validators = [DataRequired(), Length(min = 2, max = 60)])
 	email = StringField("Email", validators = [DataRequired(),Email()])
 	signup = SubmitField("Continue")
 

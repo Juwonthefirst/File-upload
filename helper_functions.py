@@ -2,7 +2,7 @@ import os, filetype, puremagic
 from functools import wraps
 from flask import session, request, redirect, url_for
 from flask_mail import Mail, Message
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 import random
 
 #validating env
@@ -15,10 +15,7 @@ def validate_env(variables):
 def login_required(f):
 	@wraps(f)
 	def wrapped_function(*args, **kwargs):
-		if "current_page" in session:
-			page = session.get("current_page")
-			return redirect(url_for(f"signup{page}"))
-		elif "username" not in session:
+		if "id" not in session:
 			session["next_page"] = request.url
 			return redirect(url_for("login"))
 		return f(*args, **kwargs)
@@ -26,16 +23,23 @@ def login_required(f):
 	
 	
 #wrapper to redirect to current signup page
-def current_signup_page(f):
+def current_page(f):
 	@wraps(f)
 	def wrapped_function(*args, **kwargs):
-		if "current_page" in session:
-			page = session.get("current_page")
-			return redirect(url_for(f"signup{page}"))
+		if "id" in session:
+			return redirect(url_for("home"))
+		elif "email" not in session:
+			return redirect(url_for("signup1"))
+		elif ("otp" not in session) and ("email_verified" not in session):
+			return redirect(url_for("send_otp"))
+		elif ("otp" in session) and ("email_verified" not in session):
+			return redirect(url_for("signup2"))
+		elif ("otp" not in session) and ("email_verified" in session):
+			return redirect(url_for("signup3"))
 		return f(*args, **kwargs)
 	return wrapped_function
 	
-#get mime from puremagic
+#get mime from filetype
 def get_filetype_mimetype(file):
 	try:
 		return filetype.guess(file).mime
@@ -98,30 +102,31 @@ def send_mail(app, receiver):
 												recipients = [ receiver ]
 											)
 		message.body = f"""
-		You made a request to change your password. To change your password use the code below 
-		                  {otp}
-		 if you didn't make this request, You can ignore this email and take proper measures to properly secure your account
+	You made a request to change your password. To change your password use the code below 
+		                  
+		                  {otp}	
+	if you didn't make this request, You can ignore this email and take proper measures to properly secure your account
 """
 		mail.send(message)
-		return "Email Sent"
+		return "Email sent"
 	except Exception as err:
-		print(err)
-		return None
+		return err
 
 
 def verify_otp(otp):
 	try:
-		current_time = datetime.utcnow()
+		current_time = datetime.now(timezone.utc)
+		print(current_time.tzinfo)
 		stored_otp = session.get("otp")
 		stored_otp_code = stored_otp.get("code")
 		otp_expiration_time = stored_otp.get("expires_in")
+		print(otp_expiration_time.tzinfo)
 		if otp == stored_otp_code:
 			session.pop("otp", None)
-			if current_time > otp_expiration_time:
+			if current_time < otp_expiration_time:
 				return "verified"
 			return "expired"
 		return "Invalid"
 	except Exception as err:
-		print(err)
-		return None
+		return err
 		

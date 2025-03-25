@@ -16,6 +16,16 @@
 <body>
     <div class="screen">
         <div class="greeting">
+        {% with messages=get_flashed_messages() %}
+                {% if messages %}
+                    {% for message in messages %}
+                        <div class="flash">
+                            <span class="iconify" data-icon="material-symbols:cancel-outline-rounded"></span>
+                            <p>{{ message }}</p>
+                        </div>
+                    {% endfor %}
+                {% endif %}
+            {% endwith %}
             <h2>Almost done, just pick a username and choose a password to continue</h2>
         </div>
         <form action="" method="post">
@@ -82,7 +92,7 @@
                     </div>
                 {% endif %}
                 <div class="submit">
-                    {{ form.signup }}
+                    {{ form.submit }}
                 </div>
             </div>
         </form>
