@@ -16,48 +16,58 @@
 <body>
     <div class="screen">
         <div class="greeting">
+        {% with messages=get_flashed_messages() %}
+                {% if messages %}
+                    {% for message in messages %}
+                        <div class="flash">
+                            <span class="iconify" data-icon="material-symbols:cancel-outline-rounded"></span>
+                            <p>{{ message }}</p>
+                        </div>
+                    {% endfor %}
+                {% endif %}
+            {% endwith %}
             <h2>Welcome to Cloud archive! Sign up to get started</h2>
         </div>
         <form action="" method="POST">
             {{ form.hidden_tag() }}
             <div class="form">
-                {% if form.firstname.errors %}
+                {% if form.first_name.errors %}
                     <div class="user field error">
-                        {{ form.firstname.label }}
+                        {{ form.first_name.label }}
                         <div class="input">
                             <ion-icon name="person-outline"></ion-icon>
-                            {{ form.firstname(placeholder="John")}}
+                            {{ form.first_name(placeholder="John")}}
                         </div>
-                        {% for error in form.firstname.errors %}
+                        {% for error in form.first_name.errors %}
                             <p>{{ error }}</p>
                         {% endfor %}
                     </div>
                 {% else %}
                     <div class="user field">
-                        {{ form.firstname.label }}
+                        {{ form.first_name.label }}
                         <div class="input">
                             <ion-icon name="person-outline"></ion-icon>
-                            {{ form.firstname(placeholder="John")}}
+                            {{ form.first_name(placeholder="John")}}
                         </div>
                     </div>
                 {% endif %}
-                {% if form.lastname.errors %}
+                {% if form.last_name.errors %}
                    <div class="user field error">
-                       {{ form.lastname.label }}
+                       {{ form.last_name.label }}
                         <div class="input">
                            <ion-icon name="person-outline"></ion-icon>
-                           {{ form.lastname(placeholder="Doe")}}
+                           {{ form.last_name(placeholder="Doe")}}
                         </div>
-                            {% for error in form.lastname.errors %}
+                            {% for error in form.last_name.errors %}
                                 <p>{{ error }}</p>
                             {% endfor %}
                         </div>
                 {% else %}
                     <div class="user field">
-                        {{ form.lastname.label }}
+                        {{ form.last_name.label }}
                         <div class="input">
                             <ion-icon name="person-outline"></ion-icon>
-                            {{ form.lastname(placeholder="Doe")}}
+                            {{ form.last_name(placeholder="Doe")}}
                         </div>
                    </div>
                 {% endif %}
