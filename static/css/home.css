@@ -17,6 +17,7 @@ body{
     height: 100vh;
     flex-direction: column;
     background-color: powderblue;
+    overflow: hidden;
 }
 .header{
     padding: 0.1rem;
@@ -24,7 +25,9 @@ body{
     background: white;
     display: flex;
     align-items: center;
-    height: 15%;
+    justify-content: center;
+    height: 10%;
+    max-height: 100px;
     width: 100%;
 }
 
@@ -32,30 +35,36 @@ body{
     width: 10%;
     height: 100%;
     border-radius: 50%;
+    float: left;
 }
 
 .main{
-    padding: 0 1rem;
+    padding: 0.5rem 1rem;
     display: grid;
-    height: 95%;
     grid-template-columns: 1fr 1fr;
-    grid-template-rows: auto;
+    grid-auto-rows: 20vh;
     overflow-y: auto;
     gap: 2em;
 }
 
 .file{
-    border-radius: 20px;
-    border: 2px solid blue;
+    display: flex;
+    border-radius: 25px;
+    border: 2px solid white;
+    justify-content: center;
+    align-items: center;
 }
 
 .circle{
+    display: flex;
+    justify-content: center;
+    align-items: center;
     position: fixed;
     top: 80%;
     left: 75%;
     z-index: 1;
     border-radius: 50%;
-    background: black;
-    width: 70px;
-    height: 70px;
+    background-color: white;
+    width: 18%;
+    height: 10%;
 }
