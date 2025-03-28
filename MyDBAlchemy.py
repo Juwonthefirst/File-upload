@@ -88,8 +88,7 @@ class Uploads(db.Model):
 	user_id: Mapped[int] = mapped_column(db.ForeignKey("users.id"), nullable = False)
 	
 	__table_args__ = (
-	db.UniqueConstraint("folder", "filename", name = "unique_file_in_folder"),
-	db.UniqueConstraint("user_id", "folder", name = "unique_folder_per_user")
+	db.UniqueConstraint("folder", "filename","user_id", name = "unique_file_in_folder"),
 )
 	
 	def __repr__(self):

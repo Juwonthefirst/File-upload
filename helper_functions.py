@@ -23,19 +23,11 @@ def login_required(f):
 	
 	
 #wrapper to redirect to current signup page
-def current_page(f):
+def not_logged_in(f):
 	@wraps(f)
 	def wrapped_function(*args, **kwargs):
 		if "id" in session:
 			return redirect(url_for("home"))
-		elif "email" not in session:
-			return redirect(url_for("signup1"))
-		elif ("otp" not in session) and ("email_verified" not in session):
-			return redirect(url_for("send_otp"))
-		elif ("otp" in session) and ("email_verified" not in session):
-			return redirect(url_for("signup2"))
-		elif ("otp" not in session) and ("email_verified" in session):
-			return redirect(url_for("signup3"))
 		return f(*args, **kwargs)
 	return wrapped_function
 	
@@ -102,8 +94,7 @@ def send_mail(app, receiver):
 												recipients = [ receiver ]
 											)
 		message.body = f"""
-	You made a request to change your password. To change your password use the code below 
-		                  
+	You made a request to change your password. To change your password use the code below 		                  
 		                  {otp}	
 	if you didn't make this request, You can ignore this email and take proper measures to properly secure your account
 """

@@ -1,12 +1,12 @@
 from flask import Flask, request, render_template, redirect, url_for, flash, session, send_file
 from werkzeug.utils import secure_filename
-from datetime import timedelta, datetime
+from datetime import timedelta, datetime, timezone
 from argon2 import PasswordHasher
 from argon2.exceptions import VerifyMismatchError
 from form import LoginForm, SignupPage1, SignupPage2, SignupPage3, FileUpload
 from dotenv import load_dotenv
 from MyDBAlchemy import db, Users, Uploads, Errors, init_table
-from helper_functions import login_required, validate_mime, send_mail, verify_otp, current_page
+from helper_functions import login_required, validate_mime, send_mail, verify_otp, not_logged_in
 from sqlalchemy import or_
 from R2_manager import R2
 from io import BytesIO
@@ -27,9 +27,9 @@ jwt_key = app.config.get("SECRET_KEY")
 # routing function
 # add username/email login by accepting text then checking if its exists in the username or email database
 @app.route("/login", methods = ["GET", "POST"])
-#@current_page
+@not_logged_in
 def login():
-	try:
+	try:				
 		next_page = session.get("next_page")
 		form = LoginForm()
 		if form.validate_on_submit():
@@ -58,8 +58,9 @@ def login():
 
 
 @app.route("/signup/user-info", methods = ["GET", "POST"])
-#@current_page
+@not_logged_in
 def signup1():
+				
 	form = SignupPage1()
 	if form.validate_on_submit():
 		first_name = form.first_name.data.strip().capitalize()
@@ -79,20 +80,27 @@ def signup1():
 	return render_template("signup(page_1).html",  form=form)
 
 @app.get("/signup/otp")
-#@current_page
+@not_logged_in
 def send_otp():
+
 	if "email" not in session:
 		return redirect(url_for("signup1"))
+	elif "email_verified" in session:
+		return redirect(url_for("signup3"))
 	response = send_mail(app, session.get("email"))
 	if response == "Email sent":
 		return redirect(url_for("signup2"))
 	Errors(error = str(response)).log()
-	return flash("Something went wrong, try again later")
+	flash("Something went wrong, try again later")
+	return redirect(url_for("signup1"))
 				
 			
 @app.route("/signup/verify", methods = ["GET", "POST"])
-#@current_page
+@not_logged_in
 def signup2():
+	
+	if "email" not in session:
+		return redirect(url_for("signup1"))
 	form = SignupPage2()
 	if form.validate_on_submit():
 		otp = form.otp.data
@@ -112,8 +120,11 @@ def signup2():
 	return render_template("signup(page_2).html",  form=form)
 
 @app.route("/signup/finish", methods = ["GET", "POST"])
-#@current_page
+@not_logged_in
 def signup3():
+		
+	if "email_verified" not in session:
+		return redirect(url_for("signup2"))		
 	form = SignupPage3()
 	if form.validate_on_submit():
 		next_page = session.get("next_page")
@@ -147,6 +158,7 @@ def signup3():
 				flash("Something went wrong, please try again")
 		else:
 			form.username.errors.append("Username already in use")
+			
 	return render_template("signup(page_3).html",  form=form)
 	
 
