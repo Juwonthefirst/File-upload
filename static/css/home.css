@@ -4,7 +4,8 @@
 }
 
 p,h2{
-    margin:0
+    margin:0;
+    color: white;
 }
 
 h2{
@@ -20,7 +21,7 @@ body{
     display: flex;
     height: 100vh;
     flex-direction: column;
-    background-color: powderblue;
+    background-color: ghostwhite;
     overflow: hidden;
 }
 .header{
@@ -53,10 +54,13 @@ body{
 
 .file{
     display: flex;
+    flex-direction: column;
     border-radius: 25px;
-    border: 2px solid white;
+    border: 2px solid lightblue;
     justify-content: center;
     align-items: center;
+    background-color: lightblue;
+    color: lightblue;
 }
 
 .circle{
@@ -68,9 +72,13 @@ body{
     left: 75%;
     z-index: 1;
     border-radius: 50%;
-    background-color: white;
+    background-color: lightblue;
+    color: whitesmoke;
     width: 18%;
     height: 10%;
 }
 
+iconify-icon{
+    font-size: 96px;
+}
 /*download flex box cheat sheets from css-tricks.com*/
