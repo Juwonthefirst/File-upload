@@ -60,11 +60,12 @@ body{
     display: flex;
     flex-direction: column;
     border-radius: 25px;
-    border: 2px solid lightblue;
+    /*border: 2px solid lightblue;*/
     justify-content: center;
     align-items: center;
     background-color: lightblue;
     color: lightblue;
+    box-shadow: 4px 4px 12px rgba(0, 50, 100, 0.2);
 }
 
 .circle{
@@ -72,17 +73,33 @@ body{
     justify-content: center;
     align-items: center;
     position: fixed;
-    top: 83%;
+    top: 80%;
     left: 75%;
     z-index: 1;
     border-radius: 50%;
-    background-color: lightblue;
-    color: whitesmoke;
+    background-color: whitesmoke;
+    color: lightskyblue;
     width: 18%;
     height: 10%;
+    font-size: 45px;
 }
 
-iconify-icon{
+.file > iconify-icon{
+    color: #DDEEF1;
     font-size: 96px;
+    text-shadow: 4px 4px 12px rgba(0, 50, 100, 0.2);
 }
 /*download flex box cheat sheets from css-tricks.com*/
+
+.body{
+    background-color: #F2EFE7
+}
+
+.file{
+    background-color: #48A6A7;
+}
+
+.file > iconify-icon{
+    color: #9ACBD0;
+}
+DDEEF1
