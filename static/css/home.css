@@ -5,7 +5,11 @@
 
 p,h2{
     margin:0;
-    color: white;
+}
+p{
+    color: ghostwhite;
+    font-weight: 500;
+    font-size: 24px;
 }
 
 h2{
