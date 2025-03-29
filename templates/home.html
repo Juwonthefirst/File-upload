@@ -13,32 +13,52 @@
 
 <body>
     <div class="body">
-        <p class="flash success">flash message</p>
+        {% with messages=get_flashed_messages(with_categories = True) %}
+            {% if messages %}
+                {% for category, message in messages %}
+                    <div class="flash {{ category }}">
+                        <span class="iconify" data-icon="material-symbols:cancel-outline-rounded"></span>
+                        <p>{{ message }}</p>
+                    </div>
+                {% endfor %}
+            {% endif %}
+        {% endwith %}
         <div class="header">
             <img src="../static/image/logo.webp" alt="profile">
             <h2>StratoVault</h2>
             <button id="mode"></button>
         </div>
         <div class="main">
-            <a href=""><div class="folder">
-                <iconify-icon icon="material-symbols:folder-rounded"></iconify-icon>
-                <p class="name">Videos of me</p>
-            </div>
-            </a>
+        {% if folders %}
+            {% for folder_name in folders %}
+                <a href="{{ url_for('cloud', folder = folder_name }}">
+                    <div class="folder">
+                        <iconify-icon icon="material-symbols:folder-rounded"></iconify-icon>
+                        <p class="name">{{ folder_name }}</p>
+                    </div>
+                </a>
+            {% endfor %}
+        {% elif files %}
+            {% for file_name in files %}
+                {% if (file_name.endswith('.mp4')) or (file_name.endswith('.mkv') or (file_name.endswith('.mov')) or (file_name.endswith('.avi') %}
+                    <div class="file">
+                        <div class="controls">
+                            <a href="{{ url_for('preview', folder = folder, filename = file_name) }}"><iconify-icon icon="mingcute:video-fill"></material-symbols:folder-rounde></iconify-icon></a>
+                            <div class="options">
+                                <a href="{{ url_for('download', folder = folder, filename = file_name) }}"><iconify-icon icon="material-symbols:download-rounded"></iconify-icon></a>
+                                <a href="{{ url_for('share', folder = folder, filename = file_name) }}"><iconify-icon icon="ic:baseline-share"></iconify-icon></a>
+                                <iconify-icon icon="material-symbols-light:delete-outline-rounded"></iconify-icon>
+                            </div>
+                        </div>
+                        <p class="name">{{ file_name }}</p>
+                    </div>
+                {% endif %}
+            {% endfor %}
+        {% endif %}
             <div class="folder">
                 <iconify-icon icon="material-symbols:folder-rounded"></iconify-icon>
             </div>
-            <div class="file">
-                <div class="controls">
-                    <iconify-icon icon="mingcute:video-fill"></material-symbols:folder-rounde></iconify-icon>
-                    <div class="options">
-                        <iconify-icon icon="material-symbols:download-rounded"></iconify-icon>
-                        <iconify-icon icon="ic:baseline-share"></iconify-icon>
-                        <iconify-icon icon="material-symbols-light:delete-outline-rounded"></iconify-icon>
-                    </div>
-                </div>
-                <p class="name">Video.mp4</p>
-            </div>
+          
             <div class="folder">
                 <iconify-icon icon="material-symbols:image-rounded"></iconify-icon>
             </div>
