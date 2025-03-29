@@ -1,5 +1,6 @@
 .flash{
     display: flex;
+    position: absolute;
     flex-direction: row;
     padding: .8em;
     border-radius: 10px;
@@ -8,6 +9,7 @@
     width: 100%;
     opacity: 1;
     gap: .4em;
+    z-index: 1;
     animation: FadeOut 0.5s ease-in 3s forwards;
 }
 
