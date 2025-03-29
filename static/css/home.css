@@ -8,8 +8,8 @@ p,h2{
 }
 p{
     color: ghostwhite;
-    font-weight: 500;
-    font-size: 24px;
+    font-weight: 600;
+    font-size: 1rem;
 }
 
 h2{
@@ -25,7 +25,7 @@ body{
     display: flex;
     height: 100vh;
     flex-direction: column;
-    background-color: ghostwhite;
+    background-color: #F2EFE7;
     overflow: hidden;
 }
 .header{
@@ -63,10 +63,11 @@ body{
     /*border: 2px solid lightblue;*/
     justify-content: center;
     align-items: center;
-    background-color: lightblue;
+    background-color: #48A6A7;
     color: lightblue;
     box-shadow: 4px 4px 12px rgba(0, 50, 100, 0.2);
 }
+
 
 .circle{
     display: flex;
@@ -89,17 +90,12 @@ body{
     font-size: 96px;
     text-shadow: 4px 4px 12px rgba(0, 50, 100, 0.2);
 }
+
+.file > .name{
+    min-width: 0;
+    max-width: 30vw;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
 /*download flex box cheat sheets from css-tricks.com*/
-
-.body{
-    background-color: #F2EFE7
-}
-
-.file{
-    background-color: #48A6A7;
-}
-
-.file > iconify-icon{
-    color: #9ACBD0;
-}
-DDEEF1
