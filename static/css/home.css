@@ -6,13 +6,11 @@
 p,h2{
     margin:0;
 }
-p{
-    
-}
 
 h2{
     font-weight: 600;
 }
+
 a{
     text-decoration: none;
     color: inherit;
@@ -22,6 +20,11 @@ body{
     padding: 0;
 }
 
+iconify-icon{
+    display: inline-block;
+    width: 1em;
+    height:1em;
+}
 .body{
     display: flex;
     height: 100vh;
@@ -57,7 +60,6 @@ body{
 }
 
 .folder, .file{
-    min-width: 0;
     height: 100%;
     display: flex;
     flex-direction: column;
@@ -74,10 +76,10 @@ body{
     box-shadow: 4px 4px 12px rgba(0, 50, 100, 0.2);
 }
 
-.file{
-    flex-direction: row;
+.controls{
+    display: flex;
+    gap: 0.7em;
 }
-
 .circle{
     display: flex;
     justify-content: center;
@@ -94,10 +96,14 @@ body{
     font-size: 45px;
 }
 
-.folder > iconify-icon, .file > iconify-icon{
+.folder > iconify-icon, .controls > iconify-icon{
     color: #DDEEF1;
     font-size: 94px;
     filter: drop-shadow(4px 4px 12px rgba(0, 0, 0, 0.25));
+}
+
+.controls > iconify-icon{
+    font-size: 86px;
 }
 
 .folder > .name, .file > .name{
@@ -110,14 +116,16 @@ body{
     font-weight: 600;
     font-size: 18px;
 }
+
 .options{
     display: flex;
     flex-direction: column;
     gap: 0.7rem;
+    justify-content: center;
 }
 
 .options > iconify-icon{
     color: #DDEEF1;
-    font-size: 24px;
+    font-size: 20px;
 }
 /*download flex box cheat sheets from css-tricks.com*/
