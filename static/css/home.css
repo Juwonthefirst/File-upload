@@ -15,7 +15,10 @@ p{
 h2{
     font-weight: 600;
 }
-
+a{
+    text-decoration: none;
+    color: inherit;
+}
 body{
     margin: 0;
     padding: 0;
@@ -44,7 +47,6 @@ body{
     width: 10%;
     height: 100%;
     border-radius: 50%;
-    float: right;
 }
 
 .main{
@@ -57,6 +59,8 @@ body{
 }
 
 .file{
+    min-width: 0;
+    height: 100%;
     display: flex;
     flex-direction: column;
     border-radius: 25px;
@@ -65,6 +69,8 @@ body{
     align-items: center;
     background-color: #48A6A7;
     color: lightblue;
+    overflow: hidden;
+    text-overflow: ellipsis;
     box-shadow: 4px 4px 12px rgba(0, 50, 100, 0.2);
 }
 
@@ -86,16 +92,20 @@ body{
 }
 
 .file > iconify-icon{
+    flex: 1;
     color: #DDEEF1;
     font-size: 96px;
     text-shadow: 4px 4px 12px rgba(0, 50, 100, 0.2);
 }
 
 .file > .name{
+    flex:1;
+    display: inline-block;
     min-width: 0;
     max-width: 30vw;
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
 }
+
 /*download flex box cheat sheets from css-tricks.com*/
