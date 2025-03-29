@@ -135,8 +135,9 @@ iconify-icon{
     display: flex;
     position: absolute;
     flex-direction: row;
-    padding: .8em;
-    border-radius: 10px;
+    font-size: 18px;
+    padding: .5em;
+    border-radius: 1rem;
     text-align: center;
     background-color: #FF1414;
     width: 100%;
@@ -159,6 +160,7 @@ iconify-icon{
 }
 
 .flash.success{
-    background-color: 48A6A7;
+    background-color: #48A6A7;
+    color: ghostwhite;
 }
 /*download flex box cheat sheets from css-tricks.com*/
