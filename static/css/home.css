@@ -7,9 +7,7 @@ p,h2{
     margin:0;
 }
 p{
-    color: ghostwhite;
-    font-weight: 600;
-    font-size: 1rem;
+    
 }
 
 h2{
@@ -92,20 +90,20 @@ body{
 }
 
 .file > iconify-icon{
-    flex: 1;
     color: #DDEEF1;
-    font-size: 96px;
-    text-shadow: 4px 4px 12px rgba(0, 50, 100, 0.2);
+    font-size: 94px;
+    filter: drop-shadow(4px 4px 12px rgba(250, 50, 100, 0.2));
 }
 
 .file > .name{
-    flex:1;
-    display: inline-block;
     min-width: 0;
     max-width: 30vw;
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
+    color: ghostwhite;
+    font-weight: 600;
+    font-size: 18px;
 }
 
 /*download flex box cheat sheets from css-tricks.com*/
