@@ -8,7 +8,8 @@ p,h2{
 }
 
 h2{
-    font-weight: 600;
+    font-weight: 700;
+    font-size: 24px;
 }
 
 a{
@@ -35,7 +36,7 @@ iconify-icon{
 }
 .header{
     padding: 0.7rem;
-    color: lightskyblue;
+    color: #DDEEF1;
     background: white;
     display: flex;
     align-items: center;
@@ -120,13 +121,13 @@ iconify-icon{
 
 .options{
     display: flex;
-    flex-direction: column;
+    flex-direction: column-reverse;
     gap: 0.7rem;
     justify-content: center;
 }
 
 .options > iconify-icon{
     color: #DDEEF1;
-    font-size: 20px;
+    font-size: 22px;
 }
 /*download flex box cheat sheets from css-tricks.com*/
