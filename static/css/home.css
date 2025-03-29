@@ -157,4 +157,8 @@ iconify-icon{
         visibility: hidden;
     }
 }
+
+.flash.success{
+    background-color: 48A6A7;
+}
 /*download flex box cheat sheets from css-tricks.com*/
