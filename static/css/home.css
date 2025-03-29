@@ -30,7 +30,7 @@ body{
     overflow: hidden;
 }
 .header{
-    padding: 0.3rem;
+    padding: 0.7rem;
     color: lightskyblue;
     background: white;
     display: flex;
@@ -56,7 +56,7 @@ body{
     gap: 2em;
 }
 
-.file{
+.folder, .file{
     min-width: 0;
     height: 100%;
     display: flex;
@@ -68,10 +68,15 @@ body{
     background-color: #48A6A7;
     color: lightblue;
     overflow: hidden;
+    gap: 0.2rem;
+    padding-bottom: 0.5rem;
     text-overflow: ellipsis;
     box-shadow: 4px 4px 12px rgba(0, 50, 100, 0.2);
 }
 
+.file{
+    flex-direction: row;
+}
 
 .circle{
     display: flex;
@@ -89,13 +94,13 @@ body{
     font-size: 45px;
 }
 
-.file > iconify-icon{
+.folder > iconify-icon, .file > iconify-icon{
     color: #DDEEF1;
     font-size: 94px;
     filter: drop-shadow(4px 4px 12px rgba(0, 0, 0, 0.25));
 }
 
-.file > .name{
+.folder > .name, .file > .name{
     min-width: 0;
     max-width: 30vw;
     white-space: nowrap;
@@ -105,5 +110,14 @@ body{
     font-weight: 600;
     font-size: 18px;
 }
+.options{
+    display: flex;
+    flex-direction: column;
+    gap: 0.7rem;
+}
 
+.options > iconify-icon{
+    color: #DDEEF1;
+    font-size: 24px;
+}
 /*download flex box cheat sheets from css-tricks.com*/
