@@ -31,7 +31,7 @@
         <div class="main">
         {% if folders %}
             {% for folder_name in folders %}
-                <a href="{{ url_for('cloud', folder = folder_name }}">
+                <a href="{{ url_for('cloud', folder = folder_name) }}">
                     <div class="folder">
                         <iconify-icon icon="material-symbols:folder-rounded"></iconify-icon>
                         <p class="name">{{ folder_name }}</p>
@@ -40,7 +40,7 @@
             {% endfor %}
         {% elif files %}
             {% for file_name in files %}
-                {% if (file_name.endswith('.mp4')) or (file_name.endswith('.mkv') or (file_name.endswith('.mov')) or (file_name.endswith('.avi') %}
+                {% if (file_name.endswith('.mp4')) or (file_name.endswith('.mkv')) or (file_name.endswith('.mov')) or (file_name.endswith('.avi')) %}
                     <div class="file">
                         <div class="controls">
                             <a href="{{ url_for('preview', folder = folder, filename = file_name) }}"><iconify-icon icon="mingcute:video-fill"></iconify-icon></a>
@@ -68,7 +68,7 @@
                     <div class="file">
                         <div class="controls">
                             <a href="{{ url_for('preview', folder = folder, filename = file_name) }}"><iconify-icon icon="gridicons:audio"></iconify-icon></a>
-                            <div class="options">*
+                            <div class="options">
                                 <a href="{{ url_for('download', folder = folder, filename = file_name) }}"><iconify-icon icon="material-symbols:download-rounded"></iconify-icon></a>
                                 <a href="{{ url_for('share', folder = folder, filename = file_name) }}"><iconify-icon icon="ic:baseline-share"></iconify-icon></a>
                                 <a href="{{ url_for('delete', folder = folder, filename = file_name) }}"><iconify-icon icon="material-symbols-light:delete-outline-rounded"></iconify-icon></a>
@@ -139,6 +139,9 @@
                 {% endif %}
             {% endfor %}
         {% endif %}
+        	<div class="cloud">
+        		<a href="{{ url_for('upload') }}"><iconify-icon icon="ic:outline-cloud"></iconify-icon>
+        	</div>
         </div>
     </div>
 </body>
