@@ -4,11 +4,17 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title></title>
+    <title>{{ type }} preview</title>
 </head>
 
 <body>
-    
+    {% if type == "video" %}
+    <video src="{{ url }}" preload="none" autoplay="autoplay"></video>
+    {% elif type == "image" %}
+    <img src="{{ url }}"/>
+    {% elif type == "audio" %}
+    <audio src="{{ url}}"></audio>
+    {% endif %}
 </body>
 
 </html>
