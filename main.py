@@ -174,8 +174,8 @@ def home():
 @login_required
 def cloud(folder):
 	user_id = session.get("id")
-	files = Uploads.fetch("filename", folder, search = "folder", all = True)
-	return render_template("home.html", files=files)
+	files = Uploads.fetch_filename(user_id, folder, all = True)
+	return render_template("home.html", files=list(dict.fromkeys(files)), folder = folder)
 	
 # route for downloading files
 @app.get("/cloud/<string:folder>/<string:filename>/download")
@@ -189,11 +189,11 @@ def download(folder, filename, user_id = None):
 		response = R2.get_file(file_location)
 	except Exception as err:
 		Errors(error = str(err), user_id = session.get("id")).log()
-		response = None
-		flash("Something went wrong, please try again later")
+		flash("Something went wrong, please try again later", "error")
+		return redirect(url_for("cloud", folder = folder))
 		
 	if  response == "File not found":
-		flash("File not found")
+		flash("File not found", "error")
 		return redirect(url_for("cloud", folder = folder))
 	return send_file (
 		BytesIO(response),
@@ -210,12 +210,15 @@ def delete(folder, filename):
 	file_location = file_row.filelocation
 	try:
 		if R2.delete(file_location):
+			file_row.delete()
 			flash(f"{filename} removed from your cloud", "success")
 			return redirect(url_for("cloud", folder = folder))
+			
 	except Exception as err:
 		Errors(error = str(err), user_id = user_id).log()
-		flash("Unable to connect to your cloud", "error")
-		return redirect(url_for("cloud", folder = folder))
+		
+	flash("Unable to connect to your cloud", "error")
+	return redirect(url_for("cloud", folder = folder))
 	
 	
 @app.get("/cloud/<string:folder>/<string:filename>/preview")
@@ -231,11 +234,15 @@ def preview(folder, filename):
 			if file_type.startswith(mime):
 				url = R2.preview(file_location, 3600)
 				if not url:
-					flash("Unable to connect to your cloud")
+					flash("Unable to connect to your cloud", "error")
 					return redirect(url_for("cloud", folder = folder))
+				break
+		flash("Can only preview Images, Videos or Audio")
 	except Exception as err:
 		Errors(error = str(err), user_id = user_id).log()
+		flash("Something went wrong, Please try again later")
 		return redirect(url_for("cloud", folder = folder))
+		
 	return render_template ("preview.html", type = mime,url = url)
 	
 	
@@ -305,7 +312,7 @@ def upload():
 													user_id = user_id
 												)
 			file_data.save()
-			file_location = f"{username}/{folder}/{file_data.id}"
+			file_location = f"{user_id}/{folder}/{file_data.id}"
 			file_data.filelocation = file_location
 			try:
 				if R2.upload(file, file_location):
@@ -316,7 +323,7 @@ def upload():
 				Errors(error = str(err), user_id = user_id).log()
 				flash("Something went wrong, please try again later", "error")
 		else:
-			flash("File type not supported")
+			flash("File type not supported", "error")
 			
 	return render_template("home.html", upload = upload)
 	

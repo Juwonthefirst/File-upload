@@ -35,19 +35,19 @@ iconify-icon{
     overflow: hidden;
 }
 .header{
-    padding: 0.7rem;
+    padding: 0.5rem;
     color: #48A6A7;
     background: white;
     display: flex;
     align-items: center;
     justify-content: space-between;
-    height: 15%;
+    height: 7%;
     max-height: 100px;
     width: 100%;
 }
 
 .header img{
-    width: 15%;
+    width: 14%;
     height: 100%;
     border-radius: 50%;
 }
@@ -80,9 +80,10 @@ iconify-icon{
 
 .controls{
     display: flex;
-    gap: 0.7em;
+    gap: 0.5em;
+
 }
-.circle{
+.cloud{
     display: flex;
     justify-content: center;
     align-items: center;
@@ -98,13 +99,13 @@ iconify-icon{
     font-size: 45px;
 }
 
-.folder > iconify-icon, .controls > iconify-icon{
+.folder > iconify-icon, .controls > a > iconify-icon, .controls > iconify-icon{
     color: #DDEEF1;
-    font-size: 94px;
+    font-size: 96px;
     filter: drop-shadow(4px 4px 12px rgba(0, 0, 0, 0.25));
 }
 
-.controls > iconify-icon{
+.controls > a > iconify-icon, .controls > iconify-icon{
     font-size: 86px;
 }
 
@@ -122,13 +123,13 @@ iconify-icon{
 .options{
     display: flex;
     flex-direction: column-reverse;
-    gap: 0.7rem;
-    justify-content: center;
+    justify-content: space-around;
+    gap: 0.08rem;
 }
 
-.options > iconify-icon{
+.options > a >  iconify-icon{
     color: #DDEEF1;
-    font-size: 22px;
+    font-size: 20px;
 }
 
 .flash{
@@ -136,7 +137,7 @@ iconify-icon{
     position: absolute;
     flex-direction: row;
     font-size: 18px;
-    padding: .5em;
+    padding: .7em;
     border-radius: 1rem;
     text-align: center;
     background-color: #FF1414;

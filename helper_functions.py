@@ -120,4 +120,3 @@ def verify_otp(otp):
 		return "Invalid"
 	except Exception as err:
 		return err
-		

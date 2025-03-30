@@ -5,7 +5,6 @@ from sqlalchemy.sql import func
 from sqlalchemy.exc import IntegrityError
 from datetime import datetime
 from typing import List
-import traceback
 
 db = SQLAlchemy()
 
@@ -121,10 +120,12 @@ class Uploads(db.Model):
 		if area in ["filename", "folder", "user_id", "filesize"] and search in ["filename", "folder", "user_id", None]:
 			if not search:
 				search = area
+			data = db.session.execute( db.select(getattr(cls, area)).order_by(getattr(cls, area)).where(getattr(cls, search) == user_detail))
+			
 			if all:
-				return db.session.execute( db.select(getattr(cls, area)).order_by(getattr(cls, area)).where(getattr(cls, search) == user_detail)).scalars().all()
-			else:
-				return db.session.execute( db.select(getattr(cls, area)).where(getattr(cls, search) == user_detail)).scalar_one_or_none()
+				return data.scalars().all()
+			return data.scalar_one_or_none()
+			
 		else:
 			raise TypeError("Incorrect value used in Fetch method")
 
@@ -141,13 +142,25 @@ class Uploads(db.Model):
 				) 
 			).scalar_one_or_none()
 			
-			
+	@classmethod
+	def fetch_filename(cls, user_id, folder, all = False):
+		raw_files = db.session.execute(
+			db.select(cls.filename).where(
+				and_(
+						cls.folder == folder, 
+						cls.user_id == user_id
+					)
+				) 
+			)
+		if all:
+			return raw_files.scalars().all()
+		return raw_files.scalar_one_or_none()
+		
  
  #table class for storing error logs				
 class Errors(db.Model):
 	id: Mapped[int] = mapped_column(Integer, primary_key = True)
 	error: Mapped[str] = mapped_column(String(255), nullable = False)
-	details: Mapped[str] = mapped_column(Text, nullable = False, default = traceback.format_exc())
 	time: Mapped[datetime] = mapped_column(DateTime, server_default = func.now())
 	user_id: Mapped[int] = mapped_column(db.ForeignKey("users.id"), nullable = True)
 	
