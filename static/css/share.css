@@ -11,6 +11,12 @@
     height: 100vh;
 }
 
+form{
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    padding: 1rem
+}
 form p{
     font-size: 0.7rem;
     height: auto;
@@ -28,6 +34,6 @@ form p{
   background-color: ghostwhite;
   border: 5px solid ghostwhite;
   border-radius: 2rem;
-  height: 5vh;
-  
+  height: 4vh;
+  width: 80vw;
 }
