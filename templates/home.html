@@ -47,11 +47,36 @@
                             <div class="options">
                                 <a href="{{ url_for('download', folder = folder, filename = file_name) }}"><iconify-icon icon="material-symbols:download-rounded"></iconify-icon></a>
                                 <a href="{{ url_for('share', folder = folder, filename = file_name) }}"><iconify-icon icon="ic:baseline-share"></iconify-icon></a>
-                                <iconify-icon icon="material-symbols-light:delete-outline-rounded"></iconify-icon>
+                                <a href="{{ url_for('delete', folder = folder, filename = file_name) }}"><iconify-icon icon="material-symbols-light:delete-outline-rounded"></iconify-icon></a>
                             </div>
                         </div>
                         <p class="name">{{ file_name }}</p>
                     </div>
+                {% elif (file_name.endswith('.jpg')) or (file_name.endswith('.jpeg')) or (file_name.endswith('.gif')) or (file_name.endswith('.webp')) or (file_name.endswith('png')) %}
+                    <div class="file">
+                        <div class="controls">
+                            <a href="{{ url_for('preview', folder = folder, filename = file_name) }}"><iconify-icon icon="material-symbols:image-rounded"></material-symbols:folder-rounde></iconify-icon></a>
+                            <div class="options">
+                                <a href="{{ url_for('download', folder = folder, filename = file_name) }}"><iconify-icon icon="material-symbols:download-rounded"></iconify-icon></a>
+                                <a href="{{ url_for('share', folder = folder, filename = file_name) }}"><iconify-icon icon="ic:baseline-share"></iconify-icon></a>
+                                <a href="{{ url_for('delete', folder = folder, filename = file_name) }}"><iconify-icon icon="material-symbols-light:delete-outline-rounded"></iconify-icon></a>
+                            </div>
+                        </div>
+                        <p class="name">{{ file_name }}</p>
+                    </div>
+                {% elif (file_name.endswith('.mp3')) or (file_name.endswith('.wav')) or (file_name.endswith('.ogg')) %}
+                    <div class="file">
+                        <div class="controls">
+                            <a href="{{ url_for('preview', folder = folder, filename = file_name) }}"><iconify-icon icon="gridicons:audio"></material-symbols:folder-rounde></iconify-icon></a>
+                            <div class="options">
+                                <a href="{{ url_for('download', folder = folder, filename = file_name) }}"><iconify-icon icon="material-symbols:download-rounded"></iconify-icon></a>
+                                <a href="{{ url_for('share', folder = folder, filename = file_name) }}"><iconify-icon icon="ic:baseline-share"></iconify-icon></a>
+                                <a href="{{ url_for('delete', folder = folder, filename = file_name) }}"><iconify-icon icon="material-symbols-light:delete-outline-rounded"></iconify-icon></a>
+                            </div>
+                        </div>
+                        <p class="name">{{ file_name }}</p>
+                    </div>
+                {% elif (file_name.endswith('.pdf')) or (file_name.endswith('.xlsx')) or (file_name.endswith('.docx')) or (file_name.endswith('.pptx')) %}
                 {% endif %}
             {% endfor %}
         {% endif %}
