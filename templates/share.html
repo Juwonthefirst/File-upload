@@ -6,6 +6,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <script src="https://code.iconify.design/iconify-icon/2.3.0/iconify-icon.min.js"></script>
     <link rel='stylesheet' href='https://fonts.googleapis.com/css2?family=Poppins:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,100;1,200;1,300;1,400;1,500;1,600;1,700;1,800;1,900&amp;display=swap'>
+    <link rel="apple-touch-icon" href="favicon.png" />
     <title>Cloud Share</title>
 </head>
 
@@ -15,7 +16,15 @@
             <p>File Name: Juwon.mp4</p> 
             <p>File Size: 50mb</p>
         </div>
-        
+        <form action="" method="post">
+            <label for="recievers">Who can use your link</label>
+            <p>Keep empty if link can be used by everyone, if multiple recievers separate with a comma</p>
+            <input type="text" name="recievers" id="reciever" value="" />
+            <div class="url">
+                
+            </div>
+            <input type="submit" value="Download" />
+        </form>
     </div>
 </body>
 
