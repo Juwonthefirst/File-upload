@@ -1,0 +1,20 @@
+*{
+    margin: 0;
+    font-family: "Poppins";
+    font-weight: 400;
+}
+
+.main{
+    background-color: powderblue;
+    display: flex;
+    flex-direction: column;
+    height: 100vh;
+}
+
+form p{
+    font-size: 0.7rem;
+}
+
+.info{
+   border: 5px solid black;
+}
