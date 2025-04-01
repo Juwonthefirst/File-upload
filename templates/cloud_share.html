@@ -14,8 +14,8 @@
 <body>
     <div class="main">
         <div class="info">
-            <p>File Name: {{ </p> 
-            <p>File Size: 50mb</p>
+            <p>File Name: {{ file.filename }}</p> 
+            <p>File Size: {{ file.filesize }}</p>
         </div>
         <form action="" method="post">
             <div class="recievers">
@@ -24,7 +24,7 @@
                 <p>Keep empty if link can be used by everyone, if multiple recievers separate with a comma</p>
             </div>
             <div class="url">
-                <p>Share link is going to appear here</p> 
+                <p>{{ link }}</p> 
             </div>
             <input type="submit" value="Share" />
         </form>
