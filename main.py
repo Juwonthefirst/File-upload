@@ -167,7 +167,7 @@ def signup3():
 def home():
 	user_id = session.get("id")												
 	folders = Uploads.fetch("folder", user_id, search = "user_id", all = True)
-	return render_template("home.html", folders = list(dict.fromkeys(folders)))
+	return render_template("home.html", folders = list(dict.fromkeys(folders)), heading = "Stratovault")
 	
 
 @app.get("/cloud/<string:folder>")
@@ -175,14 +175,13 @@ def home():
 def cloud(folder):
 	user_id = session.get("id")
 	files = Uploads.fetch_filename(user_id, folder, all = True)
-	return render_template("home.html", files=list(dict.fromkeys(files)), folder = folder)
+	return render_template("home.html", files=list(dict.fromkeys(files)), heading = folder, folder = folder)
 	
 # route for downloading files
 @app.get("/cloud/<string:folder>/<string:filename>/download")
 @login_required
-def download(folder, filename, user_id = None):
-	if not user_id:
-		user_id = session.get("id")
+def download(folder, filename):
+	user_id = session.get("id")
 	file_row = Uploads.fetch_filerow(user_id, folder, filename)	
 	file_location = file_row.filelocation
 	try:
@@ -214,6 +213,10 @@ def delete(folder, filename):
 			flash(f"{filename} removed from your cloud", "success")
 			return redirect(url_for("cloud", folder = folder))
 			
+		else:
+			flash("Unable to connect to your cloud", "error")
+			return redirect(url_for("cloud", folder = folder))
+				
 	except Exception as err:
 		Errors(error = str(err), user_id = user_id).log()
 		
@@ -250,21 +253,29 @@ def preview(folder, filename):
 @login_required
 def share(folder, filename):
 	user_id = session.get("id")
+	user_firstname = db.session.get(Users, user_id).firstname
+	file_row = Uploads.fetch_filerow(user_id, folder, filename)
+	if not file_row:
+		flash("File not found", "error")
+		return redirect(url_for("cloud", folder = folder))
 	share_link = "Click SHARE to get your file link"
 	if form.validate_on_submit():
+		file_location = file_row.filelocation
+		file_size = file_row.filesize
 		token = jwt.encode(
-			{
-				"folder" : folder, 
-				"filename" : filename, 
-				"sender_id" : user_id, 
-				"recipients":  recievers,
-				"exp" : datetime.utcnow() + timedelta(hours = 1) 
-			},
-			 jwt_key,
-			 algorithm = "HS256"
-		)
+				{
+					"name": user_firstname,
+					"filename" : filename,
+					"filesize": file_size, 
+					"filelocation" : file_location,
+					"recipients":  recievers,
+					"exp" : datetime.utcnow() + timedelta(hours = 1) 
+				},
+				 jwt_key,
+				 algorithm = "HS256"
+			)
 		share_link = url_for("shared", token = token)
-	return render_template("cloud_share.html", link = share_link)
+	return render_template("cloud_share.html", link = share_link, file = file_row)
 
 
 @app.get("/shared/<token>")
@@ -272,6 +283,28 @@ def share(folder, filename):
 def shared(token):
 	user_id = session.get("id")
 	username = session.get("username")
+	if form.validate_on_submit():
+		try:
+			response = R2.get_file(session.get("file_location"))
+		except Exception as err:
+			Errors(error = str(err), user_id = session.get("id")).log()
+			flash("Something went wrong, please try again later", "error")
+			return redirect(url_for("cloud", folder = folder))
+		
+		if  response == "File not found":
+			flash("File not found", "error")
+			return redirect(url_for("cloud", folder = folder))
+			
+		elif response is None:
+			flash("Unable to connect to your cloud", "error")
+			return redirect(url_for("cloud", folder = folder))
+			
+		return send_file(
+										BytesIO(response),
+										download_name = filename,
+										as_attachment = True
+									)
+									
 	try:
 		file_data = jwt.decode(token, jwt_key, algorithm = "HS256")
 	except jwt.ExpiredSignatureError:
@@ -280,14 +313,23 @@ def shared(token):
 		return render_template("Shared.html", error = "Invalid Link")
 	except Exception as err:
 		Errors(error = str(err), user_id = user_id).log()
-		
-	if (username in file_data.get("recipients")) or (not file_data.get("recipients")):
-		folder = file_data.get("folder")
+	receivers_list = file_data.get("recipients")
+	if receivers_list:
+		receivers = receivers_list.split(",")
+		for receiver in receivers:
+			if username == receiver.strip():
+				filesize = file_data.get("filesize")
+				filename = file_data.get("filename")
+				sender_name = file_data.get("name")
+				session["filelocation"] = file_data.get("filelocation")
+				return rendeer_template("Shared.html", filename = filename, filesize = filesize, sender_name = sender_name)
+	elif not receivers_list:
+		filesize = file_data.get("filesize")
 		filename = file_data.get("filename")
-		sender_id = file_data.get("sender_id")
-		return download(folder, filename, user_id = sender_id)
-	else:
-		return render_template("Shared.html", error = "Access Denied")
+		sender_name = file_data.get("name")
+		session["filelocation"] = file_data.get("filelocation")
+		return rendeer_template("Shared.html", filename = filename, filesize = filesize, sender_name = sender_name)
+	return render_template("Shared.html", error = "Access Denied")
 
 
 @app.route("/upload", methods = ["GET", "POST"])
@@ -331,11 +373,6 @@ def upload():
 @login_required
 def profile():
 	return render_template("profile.html")
-	
-@app.route("/profile/settings")
-@login_required
-def settings():
-	return render_template("settings.html")
 
 @app.get("/session")
 #@login_required

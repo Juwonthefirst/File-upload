@@ -41,7 +41,7 @@ class Users(db.Model):
 	@classmethod
 	def update_name(cls, user_id, new_name):
 		user = db.session.get(cls, user_id)
-		user.name = new_name
+		user.firstname = new_name
 		db.session.commit()
 		return f"Name has been changed to {new_username}"
 		
