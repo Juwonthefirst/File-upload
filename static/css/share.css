@@ -46,5 +46,6 @@ input[type="submit"]{
     width: 90%;
     height: 7%;
     border: none;
+    
     border-radius: 1.5rem;
 }
