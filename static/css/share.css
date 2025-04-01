@@ -5,7 +5,7 @@
 }
 
 .main{
-    background-color: powderblue;
+    background-color: #F2EFE7;
     display: flex;
     flex-direction: column;
     height: 100vh;
@@ -18,6 +18,10 @@ form{
     padding: 1rem;
     justify-content: center;
     align-items: center;
+    background-color: lightblue;
+    padding: 1.5rem;
+    border-top-right-radius: 1.5rem;
+    border-top-left-radius: 1.5rem;
 }
 form p{
     font-size: 0.7rem;
@@ -46,6 +50,8 @@ input[type="submit"]{
     width: 90%;
     height: 7%;
     border: none;
-    
+    background-color: #48A6A7;
+    color:lightblue;
     border-radius: 1.5rem;
+    font-size: 1.2rem;
 }
