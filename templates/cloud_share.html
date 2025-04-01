@@ -18,15 +18,19 @@
             <p>File Size: {{ file.filesize }}</p>
         </div>
         <form action="" method="post">
+            {{ form.hidden_tag() }}
             <div class="recievers">
-                <label for="recievers">Who can use your link</label>
-                <input type="text" name="recievers" id="reciever" value="" />
+                {{ form.receiver.label }}
+                {{ form.receiver(id = "recievers") }}
+                {% for error in form.receiver.errors %}
+                    <p style="color: red;">{{ error }}</p>
+                {% endfor %}
                 <p>Keep empty if link can be used by everyone, if multiple recievers separate with a comma</p>
             </div>
             <div class="url">
                 <p>{{ link }}</p> 
             </div>
-            <input type="submit" value="Share" />
+            {{ form.submit }}
         </form>
     </div>
 </body>
