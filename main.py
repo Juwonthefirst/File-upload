@@ -3,7 +3,7 @@ from werkzeug.utils import secure_filename
 from datetime import timedelta, datetime, timezone
 from argon2 import PasswordHasher
 from argon2.exceptions import VerifyMismatchError
-from form import LoginForm, SignupPage1, SignupPage2, SignupPage3, FileUpload
+from form import LoginForm, SignupPage1, SignupPage2, SignupPage3, FileUpload, FileShare, SharedFileDownload
 from dotenv import load_dotenv
 from MyDBAlchemy import db, Users, Uploads, Errors, init_table
 from helper_functions import login_required, validate_mime, send_mail, verify_otp, not_logged_in
@@ -23,7 +23,15 @@ init_table(app)
 ph = PasswordHasher()
 jwt_key = app.config.get("SECRET_KEY")
 
-
+#function to download file
+def download_template(file_data):
+	filesize = file_data.get("filesize")
+	filename = file_data.get("filename")
+	sender_name = file_data.get("name")
+	session["filelocation"] = file_data.get("filelocation")
+	return render_template("Shared.html", filename = filename, filesize = filesize, sender_name = sender_name)
+				
+				
 # routing function
 # add username/email login by accepting text then checking if its exists in the username or email database
 @app.route("/login", methods = ["GET", "POST"])
@@ -249,7 +257,7 @@ def preview(folder, filename):
 	return render_template ("preview.html", type = mime,url = url)
 	
 	
-@app.get("/cloud/<string:folder>/<string:filename>/share")
+@app.route("/cloud/<string:folder>/<string:filename>/share", methods = ["GET", "POST"])
 @login_required
 def share(folder, filename):
 	user_id = session.get("id")
@@ -258,8 +266,10 @@ def share(folder, filename):
 	if not file_row:
 		flash("File not found", "error")
 		return redirect(url_for("cloud", folder = folder))
+	form = FileShare()
 	share_link = "Click SHARE to get your file link"
 	if form.validate_on_submit():
+		recievers = form.receiver.data.strip()
 		file_location = file_row.filelocation
 		file_size = file_row.filesize
 		token = jwt.encode(
@@ -269,20 +279,22 @@ def share(folder, filename):
 					"filesize": file_size, 
 					"filelocation" : file_location,
 					"recipients":  recievers,
-					"exp" : datetime.utcnow() + timedelta(hours = 1) 
+					"exp" : datetime.now(timezone.utc) + timedelta(hours = 1) 
 				},
 				 jwt_key,
 				 algorithm = "HS256"
 			)
-		share_link = url_for("shared", token = token)
-	return render_template("cloud_share.html", link = share_link, file = file_row)
+		share_link = url_for("shared", token = token, _external = True)
+		print(share_link)
+	return render_template("cloud_share.html", link = share_link, file = file_row, form = form)
 
 
-@app.get("/shared/<token>")
+@app.route("/shared/<token>", methods = ["GET", "POST"])
 @login_required
 def shared(token):
 	user_id = session.get("id")
 	username = session.get("username")
+	form = SharedFileDownload()
 	if form.validate_on_submit():
 		try:
 			response = R2.get_file(session.get("file_location"))
@@ -317,18 +329,10 @@ def shared(token):
 	if receivers_list:
 		receivers = receivers_list.split(",")
 		for receiver in receivers:
-			if username == receiver.strip():
-				filesize = file_data.get("filesize")
-				filename = file_data.get("filename")
-				sender_name = file_data.get("name")
-				session["filelocation"] = file_data.get("filelocation")
-				return rendeer_template("Shared.html", filename = filename, filesize = filesize, sender_name = sender_name)
+			if username == receiver.strip().capitalize():
+				return download_template(file_data)
 	elif not receivers_list:
-		filesize = file_data.get("filesize")
-		filename = file_data.get("filename")
-		sender_name = file_data.get("name")
-		session["filelocation"] = file_data.get("filelocation")
-		return rendeer_template("Shared.html", filename = filename, filesize = filesize, sender_name = sender_name)
+		return download_template(file_data)
 	return render_template("Shared.html", error = "Access Denied")
 
 

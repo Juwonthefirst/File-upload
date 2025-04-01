@@ -45,9 +45,7 @@ form p{
   display: flex;
   justify-content: center;
   align-items: center;
-}
-.url > p{
-    font-size: 1rem;
+  overflow-x: auto;
 }
 
 input[type="submit"]{

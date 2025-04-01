@@ -111,7 +111,6 @@ def verify_otp(otp):
 		stored_otp = session.get("otp")
 		stored_otp_code = stored_otp.get("code")
 		otp_expiration_time = stored_otp.get("expires_in")
-		print(otp_expiration_time.tzinfo)
 		if otp == stored_otp_code:
 			session.pop("otp", None)
 			if current_time < otp_expiration_time:
