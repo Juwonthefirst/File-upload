@@ -15,7 +15,9 @@ form{
     flex: 1;
     display: flex;
     flex-direction: column;
-    padding: 1rem
+    padding: 1rem;
+    justify-content: center;
+    align-items: center;
 }
 form p{
     font-size: 0.7rem;
@@ -36,4 +38,13 @@ form p{
   border-radius: 2rem;
   height: 4vh;
   width: 80vw;
+}
+
+input[type="submit"]{
+    position: absolute;
+    top: 85%;
+    width: 90%;
+    height: 7%;
+    border: none;
+    border-radius: 1.5rem;
 }
