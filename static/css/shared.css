@@ -69,4 +69,12 @@ form > input{
     top: 50%;
     margin: 0 3rem 0 0;
     line-height: 2rem;
+    background: floralwhite;
+    border: 3px solid black;
+    border-radius: 10px;
+    padding: 10px;
+}
+
+#details-heading{
+    font-size: 18px;
 }
