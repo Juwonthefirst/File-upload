@@ -66,6 +66,7 @@ form > input{
 
 .details{
     position: absolute;
-    top: 90%;
+    top: 50%;
     margin: 0 3rem 0 0;
+    line-height: 2rem;
 }
