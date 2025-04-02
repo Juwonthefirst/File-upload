@@ -17,25 +17,18 @@
     </div>
     <div class="main">
         <div class="sender">
-            <p>{{ sender }} sent you a file</p>
+            <p>Juwon sent you a file</p>
         </div>
         <div class="file">
-                {% if filetype.startswith("video") %}
-                    <video class="preview" src="{{ url }}" controls></video>
-                {% elif filetype.startswith("audio") %}
-                    <audio class="preview"src="{{ url }}"></audio>
-                {% elif filetye.startswith("image") %}
-                    <img class="preview" src="{{ url }}" alt="{{ filename }}" />
-                {% endif %}
+            <video class="preview" src="../static/Invincible.mp4" controls></video>
             <div class="details">
                 <p id="details-heading">File Information</p>
-                <p>Name: {{ filename }}</p>
-                <p>Size: {{ filesize }}</p>
-                <p>Content type: {{ filetype }}</p>
+                <p>Name: Invincible season 3 episode 4</p>
+                <p>Size: 163mb</p>
+                <p>Content type: video/mp4</p>
             </div>
             <form action="" method="post">
-                {{ form.hidden_tag() }}
-                {{ form.submit }}
+                <input type="submit" value="Download" />
             </form>
         </div>
     </div>
