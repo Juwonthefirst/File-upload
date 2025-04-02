@@ -2,9 +2,10 @@
     margin: 0;
     border:none;
     font-family: "Poppins";
+    font-weight: 400;
 }
 
-body{
+.body{
     display: flex;
     flex-direction: column;
     height: 100vh;
@@ -41,9 +42,30 @@ body{
     display: flex;
     flex-direction: column;
     align-items: center;
+    height: 100%;
 }
 .preview{
     width: 90%;
-    border: 2px solid black;
     border-radius: 1rem;
+}
+
+form{
+    width: 100%;
+    display: flex;
+    justify-content: center;
+}
+form > input{
+    position: absolute;
+    width: 85%;
+    height: 7%;
+    top: 90%;
+    border-radius: 1rem;
+    font-size: 1.2rem;
+    background-color: #48A6A7;
+}
+
+.details{
+    position: absolute;
+    top: 90%;
+    margin: 0 3rem 0 0;
 }
