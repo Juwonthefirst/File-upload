@@ -41,13 +41,13 @@ iconify-icon{
     display: flex;
     align-items: center;
     justify-content: space-between;
-    height: 7%;
+    height: 5%;
     max-height: 100px;
     width: 100%;
 }
 
 .header img{
-    width: 14%;
+    width: 10%;
     height: 100%;
     border-radius: 50%;
 }

@@ -31,7 +31,7 @@ class SignupPage2(FlaskForm):
 	
 #class for signup from page 3
 class SignupPage3(FlaskForm):
-	username = StringField("Username", validators = [DataRequired(), Length(min = 3, max = 20), Regexp(r"^[a-zA-Z](?:[a-zA-Z0-9]*(?:[-_][a-zA-Z0-9])?)*[a-zA-Z0-9]+$", message="Username can only contain alphanumeric characters with non-consecutive - or _")])	
+	username = StringField("Username", validators = [DataRequired(), Length(min = 4, max = 20), Regexp(r"^[a-zA-Z](?:[a-zA-Z0-9]*(?:[-_][a-zA-Z0-9])?)*[a-zA-Z0-9]+$", message="Username can only contain alphanumeric characters with non-consecutive - or _")])	
 	password = PasswordField("Password", validators = [DataRequired(), Length(min = 8)])
 	c_password = PasswordField("Confirm Password", validators = [DataRequired(), Length(min = 8), EqualTo("password")])
 	submit = SubmitField("Signup")
@@ -45,7 +45,7 @@ class FileUpload(FlaskForm):
 	
 #class for form for sharing files
 class FileShare(FlaskForm):
-	receiver = StringField("Who can use your link", validators =[DataRequired(), Regexp(r"^[\w -,]+$", message = "Invalid Username format")])
+	receiver = StringField("Who can use your link", validators =[Regexp(r"^[\w -,]+$", message = "Invalid Username format")])
 	submit = SubmitField("Share")
 	
 class SharedFileDownload(FlaskForm):

@@ -22,14 +22,6 @@ db.init_app(app)
 init_table(app)
 ph = PasswordHasher()
 jwt_key = app.config.get("SECRET_KEY")
-
-#function to download file
-def download_template(file_data):
-	filesize = file_data.get("filesize")
-	filename = file_data.get("filename")
-	sender_name = file_data.get("name")
-	session["filelocation"] = file_data.get("filelocation")
-	return render_template("Shared.html", filename = filename, filesize = filesize, sender_name = sender_name)
 				
 				
 # routing function
@@ -269,15 +261,18 @@ def share(folder, filename):
 	form = FileShare()
 	share_link = "Click SHARE to get your file link"
 	if form.validate_on_submit():
-		recievers = form.receiver.data.strip()
+		raw_recievers = form.receiver.data
+		recievers = list(map( lambda x: x.strip().capitalize(), raw_recievers.split(",")))
 		file_location = file_row.filelocation
 		file_size = file_row.filesize
+		file_type = file_row.content_type
 		token = jwt.encode(
 				{
 					"name": user_firstname,
 					"filename" : filename,
 					"filesize": file_size, 
 					"filelocation" : file_location,
+					"filetype": file_type,
 					"recipients":  recievers,
 					"exp" : datetime.now(timezone.utc) + timedelta(hours = 1) 
 				},
@@ -297,7 +292,10 @@ def shared(token):
 	form = SharedFileDownload()
 	if form.validate_on_submit():
 		try:
-			response = R2.get_file(session.get("file_location"))
+			response = R2.get_file(session.get("filelocation"))
+			file_name = session.get("filename")
+			session.pop("filelocation", None)
+			session.pop("filename", None)
 		except Exception as err:
 			Errors(error = str(err), user_id = session.get("id")).log()
 			flash("Something went wrong, please try again later", "error")
@@ -313,26 +311,33 @@ def shared(token):
 			
 		return send_file(
 										BytesIO(response),
-										download_name = filename,
+										download_name = file_name,
 										as_attachment = True
 									)
 									
 	try:
-		file_data = jwt.decode(token, jwt_key, algorithm = "HS256")
+		file_data = jwt.decode(token, jwt_key, algorithms = "HS256")
 	except jwt.ExpiredSignatureError:
 		return render_template("Shared.html", error = "Expired Link")
 	except jwt.InvalidTokenError:
 		return render_template("Shared.html", error = "Invalid Link")
 	except Exception as err:
-		Errors(error = str(err), user_id = user_id).log()
+		Errors(error = str(err), user_id = user_id).log()		
 	receivers_list = file_data.get("recipients")
-	if receivers_list:
-		receivers = receivers_list.split(",")
-		for receiver in receivers:
-			if username == receiver.strip().capitalize():
-				return download_template(file_data)
-	elif not receivers_list:
-		return download_template(file_data)
+	if username in receivers_list or receivers_list == ["All"]:
+		previewable_mime = ["image/jpeg", "image/png", "image/gif", "image/webp",  "video/mp4", "video/quicktime", "video/x-msvideo","video/x-matroska", "audio/mpeg", "audio/wav", "audio/ogg"]
+		file_type = file_data.get("filetype")
+		file_size = file_data.get("filesize")
+		sender_name = file_data.get("name")
+		file_name = file_data.get("filename")
+		file_location = file_data.get("filelocation")
+		if file_type in previewable_mime:
+			url = R2.preview(file_location, 3600)
+		else:
+			url = "Not previewable"
+		session["filelocation"] = file_location
+		session["filename"] = file_name
+		return render_template("Shared.html", filename = file_name, filesize = file_size, filetype = file_type, sender = sender_name, url = url, form = form)
 	return render_template("Shared.html", error = "Access Denied")
 
 
