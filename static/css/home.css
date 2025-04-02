@@ -31,7 +31,7 @@ iconify-icon{
     display: flex;
     height: 100vh;
     flex-direction: column;
-    background-color: #F2EFE7;
+    background-color: powderblue;
     overflow: hidden;
 }
 .header{
