@@ -1,0 +1,18 @@
+*{
+    margin: 0
+}
+
+.body{
+    display: flex;
+    flex-direction: column;
+    height: 100vh;
+    overflow-x: hidden;
+    background-color: lightblue;
+}
+
+img{
+    align-self: center;
+    width: 180px;
+    height: 180px;
+    border-radius: 50%;
+}

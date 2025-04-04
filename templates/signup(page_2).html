@@ -48,6 +48,7 @@
                             {{ form.otp(placeholder="000000")}}
                         </div>
                     </div>
+                    <p>Didn't receive an otp, <a href = "{{ url_for('send_otp') }}">request</a> for a new one</p>
                 {% endif %}
                 <div class="submit">
                     {{ form.submit }}
