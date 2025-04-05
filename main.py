@@ -3,7 +3,16 @@ from werkzeug.utils import secure_filename
 from datetime import timedelta, datetime, timezone
 from argon2 import PasswordHasher
 from argon2.exceptions import VerifyMismatchError
-from form import LoginForm, SignupPage1, SignupPage2, SignupPage3, FileUpload, FileShare, SharedFileDownload
+from form import (
+									LoginForm, SignupPage1, 
+									SignupPage2, SignupPage3,
+									FileUpload, FileShare, 
+									SharedFileDownload, 
+									ChangeFirstname,
+									ChangeLastname,
+									ChangeEmail, RequestChangePass,
+									ChangePass			
+									)
 from dotenv import load_dotenv
 from MyDBAlchemy import db, Users, Uploads, Errors, init_table
 from helper_functions import login_required, validate_mime, send_mail, verify_otp, not_logged_in
@@ -15,7 +24,7 @@ import jwt
 # flask configuration settings
 app=Flask(__name__)
 app.config.from_pyfile("config.py")
-app.permanent_session_lifetime = timedelta(days=1)
+app.permanent_session_lifetime = timedelta(days=30)
 
 #initializing other modules
 db.init_app(app)
@@ -33,9 +42,9 @@ def login():
 		next_page = session.get("next_page")
 		form = LoginForm()
 		if form.validate_on_submit():
-			username = form.username.data.capitalize().strip()
+			detail = form.username.data.capitalize().strip()
 			password = form.password.data.strip()
-			user_info = db.session.execute(db.select(Users).where(or_(Users.username == username, Users.email == username))).scalar_one_or_none()
+			user_info = Users.fetch_user_row(detail)
 			if user_info:
 				try:
 					if ph.verify(user_info.password, password):
@@ -341,6 +350,46 @@ def shared(token):
 	return render_template("Shared.html", error = "Access Denied")
 
 
+@app.route("/password/change", methods = ["GET", "POST"])
+def request_password_change():
+	form = RequestChangePass()
+	if form.validate_on_submit():
+		detail = form.detail.data.strip().capitalize()
+		user_info = Users.fetch_user_row(detail)
+		if user_info:
+			response = send_mail(app, user_info.email)
+			if response == "Email sent":
+				session["id"] = user_info.id
+				return redirect(url_for("change_password"))
+			flash("Something went wrong, try again later")
+		else:
+			flash("User doesn't exist")
+	return render_template("request_password_change.html", form = form)
+	
+
+@app.route("/password/change/request", methods = ["GET", "POST"])
+@login_required
+def change_password():
+	user_id = session.get("id")
+	form = ChangePass()
+	if form.validate_on_submit():
+		otp = form.otp.data
+		response = verify_otp(otp)
+		match (response):
+			case "verified":
+				password = form.password.data
+				hashed_password = ph.hash(password)
+				Users.update_pass(user_id, hashed_password)
+				return redirect(url_for("login"))
+			case "expired":
+				flash("Expired OTP, request a new one")
+			case "invalid":
+				flash("Invalid OTP, check and try again later")
+			case _:
+				flash("Something went wrong, try again later")
+				Errors(error = str(response)).log()
+	return render_template("change_password.html", form = form)
+
 @app.route("/upload", methods = ["GET", "POST"])
 @login_required
 def upload():
@@ -370,6 +419,7 @@ def upload():
 					flash("Cloud upload successful", "success")
 				else:
 					flash("Unable to connect to the cloud", "error")
+					#file_data.delete()
 			except Exception as err:
 				Errors(error = str(err), user_id = user_id).log()
 				flash("Something went wrong, please try again later", "error")
@@ -378,10 +428,39 @@ def upload():
 			
 	return render_template("home.html", upload = upload)
 	
-@app.get("/profile")
+@app.route("/profile", methods = ["GET", "POST"])
 @login_required
 def profile():
-	return render_template("profile.html")
+	user_id = session.get("id")	
+	firstname = ChangeFirstname()
+	lastname = ChangeLastname()
+	email = ChangeEmail()
+	if firstname.validate_on_submit():
+		new_name = firstname.firstname.data
+		try:
+			response = Users.update_firstname(user_id, new_name)
+			flash(response)
+		except Exception as err:
+			Errors(error = str(err), user_id = user_id).log()
+			flash("Something went wrong, please try again later")
+			
+	if lastname.validate_on_submit():
+		new_name = lastname.lastname.data
+		try:
+			response = Users.update_lastname(user_id, new_name)
+			flash(response)
+		except Exception as err:
+			Errors(error = str(err), user_id = user_id).log()
+			flash("Something went wrong, please try again later")
+	if email.validate_on_submit():
+		session["email"] = email.email.data.strip().capitalize()
+		
+	user_detail = db.session.get(Users, user_id)	
+	firstname.firstname.data = user_detail.firstname
+	lastname.lastname.data = user_detail.lastname
+	email.email.data = user_detail.email
+	
+	return render_template("profile.html", firstname = firstname, lastname = lastname, email = email)
 
 @app.get("/session")
 #@login_required
@@ -395,29 +474,3 @@ def logout():
 	return redirect(url_for("login"))
 		
 app.run(debug = True, host="0.0.0.0")
-
-""" 
-Forms to create
-1. Profile
-2. Cloud share(send)
-3. Upload area
-4. Cloud share(recieve)
- 
-Forms to rework (reason)
-1.Signup form (
-							to allow for better login experience, like
-							email verification
-							space for full name
-							multi page signup
-							
-							)
-2. LoginForm(
-							add remember me field
-						)
-						
-	
-Rework filename to be safe for web and urls instead of filesystem
-"""
-
-#set file limit
-#allow one account per device

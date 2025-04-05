@@ -27,10 +27,11 @@ input {
     box-shadow: 4px 4px 12px rgba(0, 50, 100, 0.3);
     border-radius: 10px;
     border: .1em solid whitesmoke;
-    padding: 0 .5em;
+    padding: .7em;
     display:flex;
     grid-row-start: 2;
-    grid-column: span 3;
+    grid-column: span 5;
+    margin-bottom: 10px;
 }
 
 input:focus{

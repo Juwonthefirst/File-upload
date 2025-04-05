@@ -24,7 +24,7 @@
             {% endif %}
         {% endwith %}
         <div class="header">
-            <img src="../static/image/logo.webp" alt="profile">
+            <a href="{{ url_for('profile') }}"><img src="{{ url_for('static', filename = 'image/logo.webp') }}" alt="profile"></a>
             <h2>{{ heading }}</h2>
             <button id="mode"></button>
         </div>

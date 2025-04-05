@@ -27,28 +27,28 @@
         <div class="Firstname field">
             <form action="" method="post">
                 {{ firstname.hidden_tag() }}
-                {{ firstname.name.label }}
-                {{ firstname.name }}   
-                {{ firstname.submit }}
+                {{ firstname.firstname.label }}
+                {{ firstname.firstname }}   
+                {{ firstname.submit(class='submit') }}
             </form>
         </div>
         <div class="Lastname field">
             <form action="" method="post">
                 {{ lastname.hidden_tag() }}
-                {{ lastname.name.label }}
-                {{ lastname.name }}
-                {{ lastname.submit }}
+                {{ lastname.lastname.label }}
+                {{ lastname.lastname }}
+                {{ lastname.submit(class='submit') }}
             </form>
         </div>
         <div class="email field">
             <form action="" method="post">
                 {{ email.hidden_tag() }}
-                {{ email.name.label }}
-                {{ email.name }}   
-                {{ email.submit }}
+                {{ email.email.label }}
+                {{ email.email }}   
+                {{ email.submit(class='submit') }}
             </form>
         </div>
-        <p class="password">Change your password <a href="{{ url_for('change_password') }}">here</a></p>
+        <p class="password">Change your password <a href="{{ url_for('request_password_change') }}">here</a></p>
         <a class="logout" href="{{ url_for('logout') }}"><button class="logout" >Logout</button></a>
     </div>
 </body>

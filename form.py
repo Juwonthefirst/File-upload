@@ -47,6 +47,34 @@ class FileUpload(FlaskForm):
 class FileShare(FlaskForm):
 	receiver = StringField("Who can use your link", validators =[Regexp(r"^[\w -,]+$", message = "Invalid Username format")])
 	submit = SubmitField("Share")
-	
+
+#class for form to download shared file	
 class SharedFileDownload(FlaskForm):
 	submit = SubmitField("Download")
+	
+#class for form to change firstname 
+class ChangeFirstname(FlaskForm):
+	firstname = StringField("Firstname", validators = [DataRequired(), Length(min = 2, max = 60)])
+	submit = SubmitField("Change Firstname")
+	
+#class for form to change lastname 
+class ChangeLastname(FlaskForm):
+	lastname = StringField("Lastname", validators = [DataRequired(), Length(min = 2, max = 60)])
+	submit = SubmitField("Change Lastname")
+	
+#class for form to change email 
+class ChangeEmail(FlaskForm):
+	email = StringField("Email", validators = [DataRequired(),Email()])
+	submit = SubmitField("Change Email")
+
+#class for form to request password change
+class RequestChangePass(FlaskForm):
+	detail = StringField("Email", validators = [DataRequired()])
+	submit = SubmitField("Send OTP")
+	
+#class for form to change password
+class ChangePass(FlaskForm):
+	otp = IntegerField("OTP Code", validators = [InputRequired(), validate_length])	
+	password = PasswordField("Password", validators = [DataRequired(), Length(min = 8)])
+	c_password = PasswordField("Confirm Password", validators = [DataRequired(), Length(min = 8), EqualTo("password")])
+	submit = SubmitField("Change password")

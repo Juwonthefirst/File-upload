@@ -1,5 +1,5 @@
 from flask_sqlalchemy import SQLAlchemy
-from sqlalchemy import Integer, String, DateTime, Text, ForeignKey, Update, and_
+from sqlalchemy import Integer, String, DateTime, Text, ForeignKey, Update, and_, or_
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 from sqlalchemy.sql import func
 from sqlalchemy.exc import IntegrityError
@@ -39,11 +39,18 @@ class Users(db.Model):
 		return f"{self.username} successfully deleted from database"
 		
 	@classmethod
-	def update_name(cls, user_id, new_name):
+	def update_firstname(cls, user_id, new_name):
 		user = db.session.get(cls, user_id)
 		user.firstname = new_name
 		db.session.commit()
-		return f"Name has been changed to {new_username}"
+		return "First name change successful"
+		
+	@classmethod
+	def update_lastname(cls, user_id, new_name):
+		user = db.session.get(cls, user_id)
+		user.lastname = new_name
+		db.session.commit()
+		return "Last name change successful"
 		
 	
 	@classmethod
@@ -51,7 +58,7 @@ class Users(db.Model):
 		user = db.session.get(cls, user_id)
 		user.email = new_email
 		db.session.commit()
-		return f" Email has been changed to {new_email}"
+		return "Email change successful"
 		
 		
 	@classmethod
@@ -59,7 +66,7 @@ class Users(db.Model):
 		user = db.session.get(cls, user_id)
 		user.password = new_pass
 		db.session.commit()
-		return f"{user.username} password updated"
+		return " password updated"
 		
 		
 	# to fetch user details from the database			
@@ -71,6 +78,10 @@ class Users(db.Model):
 			return db.session.execute( db.select(getattr(cls, area)).where(getattr(cls, search) == user_detail)).scalar_one_or_none()
 		else:
 			raise TypeError("Incorrect value used in Fetch method")	
+			
+	@classmethod
+	def fetch_user_row(cls, detail):
+		return db.session.execute(db.select(cls).where(or_(cls.username == detail, cls.email == detail))).scalar_one_or_none()
 			
 
 #class for table to store all uploads made by a user

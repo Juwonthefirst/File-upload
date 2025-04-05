@@ -46,11 +46,15 @@ iconify-icon{
     width: 100%;
 }
 
-.header img{
+.header > a, .header > a > img{
     width: 10%;
     height: 100%;
     border-radius: 50%;
 }
+
+ .header > a > img{
+ 	width: 100%;
+ }
 
 .main{
     padding: 1.5rem 1rem;

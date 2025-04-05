@@ -6,8 +6,9 @@
     border-radius: 10px;
     text-align: center;
     background-color: #FF1414;
-    width: 100%;
+    width: 90%;
     opacity: 1;
+    top: 4%;
     gap: .4em;
     z-index: 1;
     animation: FadeOut 0.5s ease-in 3s forwards;
