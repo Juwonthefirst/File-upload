@@ -18,3 +18,25 @@ img{
     height: 180px;
     border-radius: 50%;
 }
+
+input {
+    background-color: white; 
+    color: black;
+    box-shadow: 4px 4px 12px rgba(0, 50, 100, 0.3);
+    border-radius: 10px;
+    border: .1em solid whitesmoke;
+    padding: .5em;
+    display:flex;
+}
+
+input:focus{
+    outline: none;
+    border-color: cadetblue;
+}
+
+.name > form{
+    display: grid;
+    grid-template-rows: 3;
+    grid-template-columns: 4;
+    gap: 1rem;
+}
