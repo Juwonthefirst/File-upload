@@ -6,10 +6,19 @@
     height: 100vh;
     max-height: 720px;
     background-color: lightblue;
+    overflow: hidden;
 }
 
 input[type="file"]{
     width: 80vw;
-    height: 30vh;
+    height: 40vh;
     border: 2px solid cadetblue;
+    border-radius: 10px;
+    justify-self: center;
+    align-self: center;
+}
+
+form{
+    display: flex;
+    flex-direction: column;
 }
