@@ -73,4 +73,31 @@ label{
     color: #FF3838;
     font-size: 20px;
     border-color: #FF3838
+} 
+
+.flash{
+    display: flex;
+    position: absolute;
+    flex-direction: row;
+    padding: .8em;
+    border-radius: 10px;
+    text-align: center;
+    background-color: #FF1414;
+    width: 100%;
+    opacity: 1;
+    gap: .4em;
+    z-index: 1;
+    animation: FadeOut 0.5s ease-in 3s forwards;
+}
+
+@keyframes FadeOut{
+    from{
+        transform: translateX(0);
+        opacity: 1;
+    }
+    to{
+        transform: translateX(-100%);
+        opacity: .3;
+        visibility: hidden;
+    }
 }
