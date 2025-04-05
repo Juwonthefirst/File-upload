@@ -23,7 +23,7 @@
                     {% endfor %}
                 {% endif %}
             {% endwith %}
-        <img src="../static/image/ice_bear.jpeg" alt="" />
+        <img src="{{ url_for('static', filename = 'image/ice_bear.jpeg') }}" alt="profile picture" />
         <div class="Firstname field">
             <form action="" method="post">
                 {{ firstname.hidden_tag() }}
