@@ -66,7 +66,6 @@ iconify-icon{
     display: flex;
     flex-direction: column;
     border-radius: 25px;
-    /*border: 2px solid lightblue;*/
     justify-content: center;
     align-items: center;
     background-color: #48A6A7;
@@ -164,4 +163,3 @@ iconify-icon{
     background-color: #48A6A7;
     color: ghostwhite;
 }
-/*download flex box cheat sheets from css-tricks.com*/
