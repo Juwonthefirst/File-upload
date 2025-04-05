@@ -15,13 +15,19 @@
 <body>
     <div class="body">
         <form action="" method="post">
-            <input type="file" name="folder" id="" required/>
+            {{ upload.hidden_tag() }}
+            {{ upload.file }}
+            {% for error in upload.file.errors %}
+                <p>{{ error }}</p>
+            {% endfor %}
             <label for="Folder">what folder should your file be stored in</label>
             <input list="folder" id="Folder" name="folder" required placeholder="Enter Folder name....">
             <datalist id="folder">
-                <option value="Juwon">Juwon</option>
+                {% for folder in folders%}
+                    <option value="{{ folder }}">Juwon</option>
+                {% endfor %}
             </datalist>
-            <input type="submit" value="Upload" class="submit"/>
+            {{ upload.upload }}
         </form>
         <div class="file">
             <h3>Total Storage used</h3>
