@@ -14,31 +14,29 @@
 <body>
     <div class="body">
         <img src="../static/image/ice_bear.jpeg" alt="" />
-        <div class="First name">
+        <div class="Firstname field">
             <form action="" method="post">
-                    <label for="Firstname">Firstname</label> 
-                    <input type="text" name="Firstname" id="Firstname"/>    
+                <label for="Firstname">Firstname</label> 
+                <input type="text" name="Firstname" id="Firstname" required/>    
                 <button class="submit" type="submit">Change Firstname</button>
             </form>
         </div>
-        <div class="Last name">
+        <div class="Lastname field">
             <form action="" method="post">
                     <label for="Lastname">Lastname</label>
-                    <input type="text" name="Lastname" id="Lastname" />
+                    <input type="text" name="Lastname" id="Lastname" required/>
                 <button class="submit" type="submit">Change Lastname</button>
             </form>
         </div>
-        <div class="email">
+        <div class="email field">
             <form action="" method="post">
-                <div class="email field">
                     <label for="Email">Email</label>
                     <input type="email" name="Email" id="Email" />
-                </div>
                 <button class="submit" type="submit">Change Email</button>
             </form>
         </div>
         <p class="password">Change your password <a href="{{ url_for('change_password') }}">here</a></p>
-        <a href="{{ url_for('logout') }}"><button class="logout">Logout</button></a>
+        <a class="logout" href="{{ url_for('logout') }}"><button class="logout" >Logout</button></a>
     </div>
 </body>
 

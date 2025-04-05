@@ -7,6 +7,7 @@
     flex-direction: column;
     height: 100vh;
     overflow-x: hidden;
+    overflow-y: auto;
     background-color: lightblue;
     padding: 20px;
     gap: 20px;
@@ -25,18 +26,50 @@ input {
     box-shadow: 4px 4px 12px rgba(0, 50, 100, 0.3);
     border-radius: 10px;
     border: .1em solid whitesmoke;
-    padding: .5em;
+    padding: 0 .5em;
     display:flex;
+    grid-row-start: 2;
+    grid-column: span 3;
 }
 
 input:focus{
     outline: none;
     border-color: cadetblue;
 }
-
-.name > form{
+.field{
+    border-top: 1px solid cadetblue;
+    padding-top: 10px;
+    /*border-width: 2px 0;*/
+}
+.field > form{
     display: grid;
-    grid-template-rows: 3;
-    grid-template-columns: 4;
-    gap: 1rem;
+    grid-template-rows: repeat(3, 1fr);
+    grid-template-columns: repeat(4, 1fr);
+    grid-row-gap: .5rem;
+}
+
+.submit{
+    grid-row-start: 3;
+    grid-column-start: 4;
+    background-color: #48A6A7;
+    border: none;
+    border-radius: 5px;
+    padding: 5px;
+}
+
+label{
+    font-size: 18px;
+}
+
+.logout{
+    width: 50vw;
+    max-width: 300px;
+    height: 7vh;
+    max-height: 50px;
+    align-self: center;
+    border-radius: 10px;
+    background-color: powderblue;
+    color: #FF3838;
+    font-size: 20px;
+    border-color: #FF3838
 }
