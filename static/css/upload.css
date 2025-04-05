@@ -1,8 +1,15 @@
+*{
+    margin: 0;
+}
+
 .body{
     height: 100vh;
+    max-height: 720px;
+    background-color: lightblue;
 }
 
 input[type="file"]{
-    width: 90vw;
-    height: 50vh;
+    width: 80vw;
+    height: 30vh;
+    border: 2px solid cadetblue;
 }
