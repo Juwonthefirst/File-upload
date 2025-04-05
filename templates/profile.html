@@ -34,16 +34,18 @@
         </div>
         <div class="Lastname field">
             <form action="" method="post">
-                    <label for="Lastname">Lastname</label>
-                    <input type="text" name="Lastname" id="Lastname" required/>
-                <button class="submit" type="submit">Change Lastname</button>
+                {{ lastname.hidden_tag() }}
+                {{ lastname.name.label }}
+                {{ lastname.name }}
+                {{ lastname.submit }}
             </form>
         </div>
         <div class="email field">
             <form action="" method="post">
-                    <label for="Email">Email</label>
-                    <input type="email" name="Email" id="Email" />
-                <button class="submit" type="submit">Change Email</button>
+                {{ email.hidden_tag() }}
+                {{ email.name.label }}
+                {{ email.name }}   
+                {{ email.submit }}
             </form>
         </div>
         <p class="password">Change your password <a href="{{ url_for('change_password') }}">here</a></p>
