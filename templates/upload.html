@@ -16,16 +16,17 @@
     <div class="body">
         <form action="" method="post">
             <input type="file" name="folder" id="" required/>
-            <label for="Folder">Folder</label>
-            <input list="folder" id="Folder" name="folder" required>
+            <label for="Folder">what folder should your file be stored in</label>
+            <input list="folder" id="Folder" name="folder" required placeholder="Enter Folder name....">
             <datalist id="folder">
                 <option value="Juwon">Juwon</option>
             </datalist>
             <input type="submit" value="Upload" class="submit"/>
         </form>
-        <h3>Total Storage used</h3>
-        <p class="filestorage">760 mb used</p>
-     
+        <div class="file">
+            <h3>Total Storage used</h3>
+            <p class="filestorage">760 mb used</p>
+        </div>
     </div>
 </body>
 
