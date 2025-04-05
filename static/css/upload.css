@@ -1,0 +1,8 @@
+.body{
+    height: 100vh;
+}
+
+input[type="file"]{
+    width: 90vw;
+    height: 50vh;
+}
