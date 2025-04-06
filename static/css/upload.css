@@ -1,7 +1,9 @@
 *{
     margin: 0;
 }
-
+.errors{
+	color: red;
+}
 .body{
     height: 100vh;
     max-height: 720px;
@@ -51,4 +53,34 @@ form{
 
 .file{
     padding: 10px;
+}
+
+.flash{
+    display: flex;
+    position: absolute;
+    flex-direction: row;
+    padding: .8em;
+    border-radius: 10px;
+    text-align: center;
+    align-self: flex-end;
+    background-color: #FF1414;
+    width: 90%;
+    opacity: 1;
+    top: 0%;
+    right: 0%;
+    gap: .4em;
+    z-index: 1;
+    animation: FadeOut 0.5s ease-in 3s forwards;
+}
+
+@keyframes FadeOut{
+    from{
+        transform: translateX(0);
+        opacity: 1;
+    }
+    to{
+        transform: translateX(-100%);
+        opacity: .3;
+        visibility: hidden;
+    }
 }

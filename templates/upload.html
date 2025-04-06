@@ -14,7 +14,17 @@
 
 <body>
     <div class="body">
-        <form action="" method="post">
+            {% with messages=get_flashed_messages() %}
+                {% if messages %}
+                    {% for message in messages %}
+                        <div class="flash">
+                            <span class="iconify" data-icon="material-symbols:cancel-outline-rounded"></span>
+                            <p class="error">{{ message }}</p>
+                        </div>
+                    {% endfor %}
+                {% endif %}
+            {% endwith %}
+        <form action="" method="post" enctype="multipart/form-data">
             {{ upload.hidden_tag() }}
             {{ upload.file }}
             {% for error in upload.file.errors %}
@@ -27,7 +37,7 @@
                     <option value="{{ folder }}">Juwon</option>
                 {% endfor %}
             </datalist>
-            {{ upload.upload }}
+            {{ upload.upload(class="submit") }}
         </form>
         <div class="file">
             <h3>Total Storage used</h3>

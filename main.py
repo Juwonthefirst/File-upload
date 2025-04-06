@@ -245,18 +245,17 @@ def preview(folder, filename):
 		for mime in allowed_mime:
 			if file_type.startswith(mime):
 				url = R2.preview(file_location, 3600)
-				if not url:
+				if url:
+					return render_template ("preview.html", type = mime,url = url)
+				else:
 					flash("Unable to connect to your cloud", "error")
 					return redirect(url_for("cloud", folder = folder))
-				break
 		flash("Can only preview Images, Videos or Audio")
 	except Exception as err:
 		Errors(error = str(err), user_id = user_id).log()
 		flash("Something went wrong, Please try again later")
-		return redirect(url_for("cloud", folder = folder))
-		
-	return render_template ("preview.html", type = mime,url = url)
 	
+	return redirect(url_for("cloud", folder = folder))	
 	
 @app.route("/cloud/<string:folder>/<string:filename>/share", methods = ["GET", "POST"])
 @login_required
@@ -393,14 +392,16 @@ def change_password():
 @app.route("/upload", methods = ["GET", "POST"])
 @login_required
 def upload():
-	user_id = session["id"]
-	username = session["username"]
+	user_id = session.get("id")
+	username = session.get("id")
 	upload = FileUpload()
+	file = upload.file.data
 	if upload.validate_on_submit():
 		file = upload.file.data
 		mime_type = validate_mime(file)
 		if mime_type:
-			file_name = secure_filename(file.filename)
+			folder = request.form.get("folder")
+			file_name = file.filename
 			file_size = len(file.read())
 			file.seek(0)
 			file_data = Uploads(
@@ -414,8 +415,10 @@ def upload():
 			file_data.save()
 			file_location = f"{user_id}/{folder}/{file_data.id}"
 			file_data.filelocation = file_location
+			db.session.commit()
 			try:
 				if R2.upload(file, file_location):
+					session["total_file_size"] += file_size
 					flash("Cloud upload successful", "success")
 				else:
 					flash("Unable to connect to the cloud", "error")
@@ -426,7 +429,8 @@ def upload():
 		else:
 			flash("File type not supported", "error")
 			
-	return render_template("home.html", upload = upload)
+	folders = Uploads.fetch("folder", user_id, search = "user_id", all = True)			
+	return render_template("upload.html", upload = upload, total_file_size = session.get("total_file_size"), folders = list(dict.fromkeys(folders)))
 	
 @app.route("/profile", methods = ["GET", "POST"])
 @login_required
