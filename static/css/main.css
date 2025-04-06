@@ -93,3 +93,11 @@ ion-icon{
     font-weight: 700;
     cursor: pointer;
 }
+
+.request, .request > form{
+    display: inline;
+}
+
+.request > form > input{
+    
+}
