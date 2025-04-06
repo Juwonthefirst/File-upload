@@ -11,11 +11,11 @@ from form import (
 									ChangeFirstname,
 									ChangeLastname,
 									ChangeEmail, RequestChangePass,
-									ChangePass			
+									ChangePass, RequestOTP			
 									)
 from dotenv import load_dotenv
 from MyDBAlchemy import db, Users, Uploads, Errors, init_table
-from helper_functions import login_required, validate_mime, send_mail, verify_otp, not_logged_in
+from helper_functions import login_required, validate_mime, send_mail, verify_otp, not_logged_in, resend_mail
 from sqlalchemy import or_
 from R2_manager import R2
 from io import BytesIO
@@ -83,25 +83,14 @@ def signup1():
 											"last_name": last_name,
 											"email": email
 											})
-			return redirect(url_for("send_otp"))
+			response = send_mail(app, email)
+			if response == "Email sent":
+				return redirect(url_for("signup2"))
+			Errors(error = str(response)).log()
+			flash("Something went wrong, try again later")
 		else:
 			form.email.errors.append("Email already in use")
 	return render_template("signup(page_1).html",  form=form)
-
-@app.get("/signup/otp")
-@not_logged_in
-def send_otp():
-
-	if "email" not in session:
-		return redirect(url_for("signup1"))
-	elif "email_verified" in session:
-		return redirect(url_for("signup3"))
-	response = send_mail(app, session.get("email"))
-	if response == "Email sent":
-		return redirect(url_for("signup2"))
-	Errors(error = str(response)).log()
-	flash("Something went wrong, try again later")
-	return redirect(url_for("signup1"))
 				
 			
 @app.route("/signup/verify", methods = ["GET", "POST"])
@@ -110,8 +99,14 @@ def signup2():
 	
 	if "email" not in session:
 		return redirect(url_for("signup1"))
+	
+	request = RequestOTP()
 	form = SignupPage2()
-	if form.validate_on_submit():
+	if request.validate_on_submit():
+		response = resend_mail(app)
+		if response != "Email sent":
+			Errors(error = str(response)).log
+	elif form.validate_on_submit():
 		otp = form.otp.data
 		response = verify_otp(otp)
 		match (response):
@@ -126,7 +121,7 @@ def signup2():
 				flash("Something went wrong, try again later")
 				Errors(error = str(response)).log()
 		
-	return render_template("signup(page_2).html",  form=form)
+	return render_template("signup(page_2).html",  form=form, request = request)
 
 @app.route("/signup/finish", methods = ["GET", "POST"])
 @not_logged_in
@@ -293,7 +288,6 @@ def share(folder, filename):
 
 
 @app.route("/shared/<token>", methods = ["GET", "POST"])
-@login_required
 def shared(token):
 	user_id = session.get("id")
 	username = session.get("username")
@@ -359,6 +353,7 @@ def request_password_change():
 			response = send_mail(app, user_info.email)
 			if response == "Email sent":
 				session["id"] = user_info.id
+				session["email"] = user_info.email
 				return redirect(url_for("change_password"))
 			flash("Something went wrong, try again later")
 		else:
@@ -371,7 +366,12 @@ def request_password_change():
 def change_password():
 	user_id = session.get("id")
 	form = ChangePass()
-	if form.validate_on_submit():
+	request = RequestOTP()
+	if request.validate_on_submit():
+		response = resend_mail(app)
+		if response != "Email sent":
+			Errors(error = str(response)).log
+	elif form.validate_on_submit():
 		otp = form.otp.data
 		response = verify_otp(otp)
 		match (response):
@@ -379,6 +379,8 @@ def change_password():
 				password = form.password.data
 				hashed_password = ph.hash(password)
 				Users.update_pass(user_id, hashed_password)
+				session.clear()
+				flash("Password change successful")
 				return redirect(url_for("login"))
 			case "expired":
 				flash("Expired OTP, request a new one")
@@ -386,8 +388,8 @@ def change_password():
 				flash("Invalid OTP, check and try again later")
 			case _:
 				flash("Something went wrong, try again later")
-				Errors(error = str(response)).log()
-	return render_template("change_password.html", form = form)
+				Errors(error = str(response)).log()	
+	return render_template("change_password.html", form = form, request = request)
 
 @app.route("/upload", methods = ["GET", "POST"])
 @login_required

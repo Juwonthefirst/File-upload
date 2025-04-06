@@ -1,6 +1,6 @@
 import os, filetype, puremagic
 from functools import wraps
-from flask import session, request, redirect, url_for
+from flask import session, request, redirect, url_for, flash
 from flask_mail import Mail, Message
 from datetime import datetime, timedelta, timezone
 import random
@@ -80,7 +80,7 @@ def get_otp():
 	otp = random.randint(100000, 999999)
 	session["otp"] = {
 									"code": otp,
-									 "expires_in": datetime.utcnow() + timedelta(minutes = 10) 
+									 "expires_in": datetime.now(timezone.utc) + timedelta(minutes = 10) 
 								}
 	return otp
 
@@ -119,3 +119,23 @@ def verify_otp(otp):
 		return "Invalid"
 	except Exception as err:
 		return err
+		
+def resend_mail(app):
+	if "otp" in session:
+		request_time = session["otp"]["expires_in"] - timedelta(minutes = 10)
+		current_time = datetime.now(timezone.utc)
+		if current_time >= request_time + timedelta(minutes = 2):
+			response = send_mail(app, session.get("email"))
+			if response == "Email sent":
+				flash("New OTP sent successfully", "success")
+			else:	
+				flash("Something went wrong, try again later", "error")
+		else:
+			flash("Wait two minutes before requesting a new otp", "success")
+	else:
+		response = send_mail(app, session.get("email"))
+		if response == "Email sent":
+			flash("New OTP sent successfully", "success")
+		else:
+			flash("Something went wrong, try again later", "error")
+	return response

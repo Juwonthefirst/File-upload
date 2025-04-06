@@ -71,6 +71,10 @@ ion-icon{
     margin-bottom: -0.2em;
 }
 
+.error{
+    border-color: red;
+    color: red;
+}
 
 .field label{
     font-size: .9em;
@@ -92,14 +96,4 @@ ion-icon{
     height: 100%;
     font-weight: 700;
     cursor: pointer;
-}
-
-.request, .request > form{
-    display: inline;
-}
-
-.request > form > input{
-    background-color: powderblue;
-    border: 1px solid lightblue;
-    border-radius: 2px;
 }
