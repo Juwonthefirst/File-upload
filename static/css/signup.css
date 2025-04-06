@@ -45,3 +45,11 @@ h2{
     justify-content: center;
     align-items: center;
 }
+
+.request, .request > form{
+    display: inline;
+}
+
+.request > form > input{
+    
+}
