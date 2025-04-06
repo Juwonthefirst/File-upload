@@ -99,5 +99,7 @@ ion-icon{
 }
 
 .request > form > input{
-    
+    background-color: powderblue;
+    border: 1px solid lightblue;
+    border-radius: 2px;
 }
