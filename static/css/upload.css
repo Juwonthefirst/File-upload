@@ -87,3 +87,8 @@ form{
     background-color: #48A6A7;
     color: ghostwhite;
 }
+
+.error{
+    border-color: red;
+    color: red;
+}

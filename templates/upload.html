@@ -19,7 +19,7 @@
                     {% for category, message in messages %}
                         <div class="flash {{ category }}">
                             <span class="iconify" data-icon="material-symbols:cancel-outline-rounded"></span>
-                            <p class="error">{{ message }}</p>
+                            <p>{{ message }}</p>
                         </div>
                     {% endfor %}
                 {% endif %}
@@ -28,7 +28,7 @@
             {{ upload.hidden_tag() }}
             {{ upload.file }}
             {% for error in upload.file.errors %}
-                <p>{{ error }}</p>
+                <p class="error">{{ error }}</p>
             {% endfor %}
             <label for="Folder">what folder should your file be stored in</label>
             <input list="folder" id="Folder" name="folder" required placeholder="Enter Folder name....">

@@ -82,3 +82,7 @@ label{
     padding: 7px;
 }
 
+.error{
+    border-color: red;
+    color: red;
+}
