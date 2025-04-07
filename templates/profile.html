@@ -47,6 +47,7 @@
                 {{ email.email }}   
                 {{ email.submit(class='submit') }}
             </form>
+            <p style="font-size: 12px">you would be required to input your password and verify your new email with an otp</p>
         </div>
         <p class="password">Change your password <a href="{{ url_for('request_password_change') }}">here</a></p>
         <a class="logout" href="{{ url_for('logout') }}"><button class="logout" >Logout</button></a>

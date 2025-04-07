@@ -9,30 +9,7 @@ h2{
     padding-bottom: 5em;
 }
 
-.flash{
-    display: flex;
-    flex-direction: row;
-    padding: .8em;
-    border-radius: 10px;
-    text-align: center;
-    background-color: #FF1414;
-    width: 100%;
-    opacity: 1;
-    gap: .4em;
-    animation: FadeOut 0.5s ease-in 3s forwards;
-}
 
-@keyframes FadeOut{
-    from{
-        transform: translateX(0);
-        opacity: 1;
-    }
-    to{
-        transform: translateX(-100%);
-        opacity: .3;
-        visibility: hidden;
-    }
-}
 
 .greeting{
     padding: 3em 0 3em;
@@ -40,12 +17,4 @@ h2{
     flex-direction: column;
     justify-content: center;
     align-items: center;
-}
-
-.request, .request > form{
-    display: inline;
-}
-
-.request > form > input{
-    
 }
