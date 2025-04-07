@@ -87,7 +87,6 @@ def signup1():
 			if response == "Email sent":
 				return redirect(url_for("signup2"))
 			Errors(error = str(response)).log()
-			flash("Something went wrong, try again later")
 		else:
 			form.email.errors.append("Email already in use")
 	return render_template("signup(page_1).html",  form=form)
