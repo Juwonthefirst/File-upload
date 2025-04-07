@@ -12,33 +12,46 @@
 
 <body>
     <div class="body">
-    <div class="header">
-        <p>StratoVault</p>   
-    </div>
-    <div class="main">
-        <div class="sender">
-            <p>{{ sender }} sent you a file</p>
-        </div>
-        <div class="file">
-                {% if filetype.startswith("video") %}
-                    <video class="preview" src="{{ url }}" controls></video>
-                {% elif filetype.startswith("audio") %}
-                    <audio class="preview"src="{{ url }}"></audio>
-                {% elif filetype.startswith("image") %}
-                    <img class="preview" src="{{ url }}" alt="{{ filename }}" />
-                {% endif %}
-            <div class="details">
-                <p id="details-heading">File Information</p>
-                <p>Name: {{ filename }}</p>
-                <p>Size: {{ filesize }}</p>
-                <p>Content type: {{ filetype }}</p>
+            <div class="header">
+                <p>StratoVault</p>   
             </div>
-            <form action="" method="post">
-                {{ form.hidden_tag() }}
-                {{ form.submit }}
-            </form>
-        </div>
-    </div>
+            {% if error %}
+                <div class="error">
+                    <h2>{{ error }}</h2>
+                    {% if error == "Access Denied" %}
+                        <p>The owner of the link did not give you permission to access this link</p>    
+                    {% elif error == "Expired Link" %}
+                        <p>This link is expired, links expire 1 hour after generation</p>
+                    {% elif error == "Invalid Link" %}
+                        <p>This link doesn't exist</p>
+                    {% endif %}
+                </div>
+            {% else %}
+                <div class="main">
+                    <div class="sender">
+                        <p>{{ sender }} sent you a file</p>
+                    </div>
+                    <div class="file">
+                            {% if filetype.startswith("video") %}
+                                <video class="preview" src="{{ url }}" controls></video>
+                            {% elif filetype.startswith("audio") %}
+                                <audio class="preview"src="{{ url }}"></audio>
+                            {% elif filetype.startswith("image") %}
+                                <img class="preview" src="{{ url }}" alt="{{ filename }}" />
+                            {% endif %}
+                        <div class="details">
+                            <p id="details-heading">File Information</p>
+                            <p>Name: {{ filename }}</p>
+                            <p>Size: {{ filesize }}</p>
+                            <p>Content type: {{ filetype }}</p>
+                        </div>
+                        <form action="" method="post">
+                            {{ form.hidden_tag() }}
+                            {{ form.submit }}
+                        </form>
+                    </div>
+                </div>
+            {% endif %}
     </div>
 </body>
 
