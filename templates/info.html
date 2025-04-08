@@ -67,7 +67,7 @@
             <div class="main">
                 <form action="" method="post">
                     {{ form.hidden_tag() }}
-                    <h3>Are you sure you want to delete filename</h3>
+                    <h3>Are you sure you want to delete {{ filename }}</h3>
                     {{ form.submit }}
                 </form>                
             </div>

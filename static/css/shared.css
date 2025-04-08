@@ -25,7 +25,6 @@
     max-height: 100px;
     width: 100%;
 }
-
 .main{
     overflow-y: auto;
     background-color: lightblue;

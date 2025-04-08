@@ -85,3 +85,6 @@ class RequestOTP(FlaskForm):
 class VerifyPassword(FlaskForm):
 	password = PasswordField("Password", validators = [DataRequired(), Length(min = 8)])
 	submit = SubmitField("Send OTP")
+	
+class ConfirmDelete(FlaskForm):
+	submit = SubmitField("Delete")

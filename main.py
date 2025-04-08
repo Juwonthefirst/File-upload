@@ -12,7 +12,7 @@ from form import (
 									ChangeLastname,
 									ChangeEmail, RequestChangePass,
 									ChangePass, RequestOTP,
-									VerifyPassword			
+									VerifyPassword, ConfirmDelete		
 									)
 from dotenv import load_dotenv
 from MyDBAlchemy import db, Users, Uploads, Errors, init_table
@@ -210,29 +210,32 @@ def download(folder, filename):
 		download_name = filename,
 		as_attachment = True
 		)
-
-
-@app.get("/cloud/<string:folder>/<string:filename>/delete")
+	
+@app.route("/cloud/<string:folder>/<string:filename>/delete", methods = ["GET", "POST"])
 @login_required
 def delete(folder, filename):
 	user_id = session.get("id")
-	file_row = Uploads.fetch_filerow(user_id, folder, filename)	
-	file_location = file_row.filelocation
-	try:
-		if R2.delete(file_location):
-			file_row.delete()
-			flash(f"{filename} removed from your cloud", "success")
-			return redirect(url_for("cloud", folder = folder))
-			
-		else:
-			flash("Unable to connect to your cloud", "error")
-			return redirect(url_for("cloud", folder = folder))
+	form = ConfirmDelete()
+	if form.validate_on_submit():
+		file_row = Uploads.fetch_filerow(user_id, folder, filename)	
+		file_location = file_row.filelocation
+		try:
+			if R2.delete(file_location):
+				file_row.delete()
+				flash(f"{filename} removed from your cloud", "success")
+				return redirect(url_for("cloud", folder = folder))
 				
-	except Exception as err:
-		Errors(error = str(err), user_id = user_id).log()
+			else:
+				flash("Unable to connect to your cloud", "error")
+				return redirect(url_for("cloud", folder = folder))
+					
+		except Exception as err:
+			Errors(error = str(err), user_id = user_id).log()
+			
+		flash("Unable to connect to your cloud", "error")
+		return redirect(url_for("cloud", folder = folder))
 		
-	flash("Unable to connect to your cloud", "error")
-	return redirect(url_for("cloud", folder = folder))
+	return render_template("info.html", form = form, filename = filename)
 	
 	
 @app.get("/cloud/<string:folder>/<string:filename>/preview")
