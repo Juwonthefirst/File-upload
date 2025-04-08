@@ -49,8 +49,9 @@
             </div>
             <div class="main">
                 <form action="" method="post">
+                    {{ form.hidden_tag() }}
                     <h3>Are you sure you want to delete filename</h3>
-                    <input type="submit" name="" id="" value="Delete" />
+                    {{ form.submit }}
                 </form>                
             </div>
 
