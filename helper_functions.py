@@ -101,6 +101,7 @@ def send_mail(app, receiver):
 		mail.send(message)
 		return "Email sent"
 	except Exception as err:
+		flash("Something went wrong, try again later")
 		return err
 
 
@@ -139,3 +140,12 @@ def resend_mail(app):
 		else:
 			flash("Something went wrong, try again later", "error")
 	return response
+	
+def stringify_byte(filesize):
+	if filesize >= 900000:
+		return f"{round(filesize/1000000, 2)} MB"
+	elif 900 <=  filesize < 900000:
+		return f"{round(filesize/1000, 2)} KB"
+	elif filesize < 900:
+		return f"{filesize} B"
+	

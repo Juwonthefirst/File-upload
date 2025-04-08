@@ -34,6 +34,7 @@ form p{
    border-radius: 2rem;
    line-height: 30px;
    padding: 0.8rem;
+   overflow-x: auto;
 }
 
 .url{

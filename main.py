@@ -11,12 +11,20 @@ from form import (
 									ChangeFirstname,
 									ChangeLastname,
 									ChangeEmail, RequestChangePass,
-									ChangePass, RequestOTP			
+									ChangePass, RequestOTP,
+									VerifyPassword			
 									)
 from dotenv import load_dotenv
 from MyDBAlchemy import db, Users, Uploads, Errors, init_table
-from helper_functions import login_required, validate_mime, send_mail, verify_otp, not_logged_in, resend_mail
-from sqlalchemy import or_
+from helper_functions import (
+														login_required, 
+														validate_mime, 
+														send_mail, 
+														verify_otp, 
+														not_logged_in, 
+														resend_mail,
+														stringify_byte
+													)
 from R2_manager import R2
 from io import BytesIO
 import jwt
@@ -120,7 +128,7 @@ def signup2():
 				flash("Something went wrong, try again later")
 				Errors(error = str(response)).log()
 		
-	return render_template("signup(page_2).html",  form=form, request = request)
+	return render_template("signup(page_2).html",  form=form, request = request, title = "Stratovault - verify OTP")
 
 @app.route("/signup/finish", methods = ["GET", "POST"])
 @not_logged_in
@@ -283,7 +291,7 @@ def share(folder, filename):
 			)
 		share_link = url_for("shared", token = token, _external = True)
 		print(share_link)
-	return render_template("cloud_share.html", link = share_link, file = file_row, form = form)
+	return render_template("cloud_share.html", link = share_link, filename = file_row.filename, filesize = stringify_byte(file_row.filesize), form = form)
 
 
 @app.route("/shared/<token>", methods = ["GET", "POST"])
@@ -338,11 +346,11 @@ def shared(token):
 			url = "Not previewable"
 		session["filelocation"] = file_location
 		session["filename"] = file_name
-		return render_template("Shared.html", filename = file_name, filesize = file_size, filetype = file_type, sender = sender_name, url = url, form = form)
+		return render_template("Shared.html", filename = file_name, filesize = stringify_byte(file_size), filetype = file_type, sender = sender_name, url = url, form = form)
 	return render_template("Shared.html", error = "Access Denied")
 
 
-@app.route("/password/change", methods = ["GET", "POST"])
+@app.route("/password/change/request", methods = ["GET", "POST"])
 def request_password_change():
 	form = RequestChangePass()
 	if form.validate_on_submit():
@@ -354,18 +362,19 @@ def request_password_change():
 				session["id"] = user_info.id
 				session["email"] = user_info.email
 				return redirect(url_for("change_password"))
-			flash("Something went wrong, try again later")
 		else:
 			flash("User doesn't exist")
 	return render_template("request_password_change.html", form = form)
 	
 
-@app.route("/password/change/request", methods = ["GET", "POST"])
+@app.route("/password/change", methods = ["GET", "POST"])
 @login_required
 def change_password():
 	user_id = session.get("id")
 	form = ChangePass()
 	request = RequestOTP()
+	if "otp" not in session:
+		return redirect(url_for("request_password_change"))
 	if request.validate_on_submit():
 		response = resend_mail(app)
 		if response != "Email sent":
@@ -390,6 +399,52 @@ def change_password():
 				Errors(error = str(response)).log()	
 	return render_template("change_password.html", form = form, request = request)
 
+
+@app.route("/email/change/request", methods=["GET", "POST"])
+@login_required
+def request_email_change():
+	user_id = session.get("id")
+	form = VerifyPassword()
+	if form.validate_on_submit():
+		user_details = db.session.get(Users, user_id)
+		password = form.password.data.strip()
+		if ph.verify(user_details.password, password):
+			response = send_mail(app, session.get("email"))
+			if response == "Email sent":
+				return redirect(url_for("email_change")) 
+			Errors(error = str(response), user_id = user_id).log()
+	return render_template("email_change_request.html", form = form)
+	
+@app.route("/email/change", methods=["GET", "POST"])
+@login_required
+def email_change():
+	user_id = session.get("id")
+	request = RequestOTP()
+	form = SignupPage2()
+	if "otp" not in session:
+		return redirect(url_for("request_email_change"))
+	if request.validate_on_submit():
+		response = resend_mail(app)
+		if response != "Email sent":
+			Errors(error = str(response)).log
+	elif form.validate_on_submit():
+		otp = form.otp.data
+		response = verify_otp(otp)
+		match (response):
+			case "verified":
+				Users.update_email(user_id, session.get("email"))
+				session.pop("email", None)
+				return redirect(url_for("profile"))
+			case "expired":
+				flash("Expired OTP, request a new one")
+			case "invalid":
+				flash("Invalid OTP, check and try again later")
+			case _:
+				flash("Something went wrong, try again later")
+				Errors(error = str(response)).log()
+		
+	return render_template("signup(page_2).html",  form=form, request = request, title = "Stratovault - Email Change")
+		
 @app.route("/upload", methods = ["GET", "POST"])
 @login_required
 def upload():
@@ -401,7 +456,7 @@ def upload():
 		file = upload.file.data
 		mime_type = validate_mime(file)
 		if mime_type:
-			folder = request.form.get("folder")
+			folder = request.form.get("folder").strip()
 			file_name = file.filename
 			file_size = len(file.read())
 			file.seek(0)
@@ -431,7 +486,7 @@ def upload():
 			flash("File type not supported", "error")
 			
 	folders = Uploads.fetch("folder", user_id, search = "user_id", all = True)			
-	return render_template("upload.html", upload = upload, total_file_size = session.get("total_file_size"), folders = list(dict.fromkeys(folders)))
+	return render_template("upload.html", upload = upload, total_file_size = stringify_byte(session.get("total_file_size")), folders = list(dict.fromkeys(folders)))
 	
 @app.route("/profile", methods = ["GET", "POST"])
 @login_required
@@ -444,7 +499,7 @@ def profile():
 		new_name = firstname.firstname.data
 		try:
 			response = Users.update_firstname(user_id, new_name)
-			flash(response)
+			flash(response, "success")
 		except Exception as err:
 			Errors(error = str(err), user_id = user_id).log()
 			flash("Something went wrong, please try again later")
@@ -453,12 +508,13 @@ def profile():
 		new_name = lastname.lastname.data
 		try:
 			response = Users.update_lastname(user_id, new_name)
-			flash(response)
+			flash(response, "success")
 		except Exception as err:
 			Errors(error = str(err), user_id = user_id).log()
 			flash("Something went wrong, please try again later")
 	if email.validate_on_submit():
 		session["email"] = email.email.data.strip().capitalize()
+		return redirect(url_for("request_email_change"))
 		
 	user_detail = db.session.get(Users, user_id)	
 	firstname.firstname.data = user_detail.firstname
@@ -478,4 +534,4 @@ def logout():
 	session.clear()
 	return redirect(url_for("login"))
 		
-app.run(debug = True, host="0.0.0.0")
+app.run(debug = True, host = "0.0.0.0", port = 5000)

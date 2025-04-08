@@ -54,12 +54,12 @@ class SharedFileDownload(FlaskForm):
 	
 #class for form to change firstname 
 class ChangeFirstname(FlaskForm):
-	firstname = StringField("Firstname", validators = [DataRequired(), Length(min = 2, max = 60)])
+	firstname = StringField("First Name", validators = [DataRequired(), Length(min = 2, max = 60)])
 	submit = SubmitField("Change Firstname")
 	
 #class for form to change lastname 
 class ChangeLastname(FlaskForm):
-	lastname = StringField("Lastname", validators = [DataRequired(), Length(min = 2, max = 60)])
+	lastname = StringField("Last Name", validators = [DataRequired(), Length(min = 2, max = 60)])
 	submit = SubmitField("Change Lastname")
 	
 #class for form to change email 
@@ -69,7 +69,7 @@ class ChangeEmail(FlaskForm):
 
 #class for form to request password change
 class RequestChangePass(FlaskForm):
-	detail = StringField("Email or Username", validators = [DataRequired()])
+	detail = StringField("Email", validators = [DataRequired()])
 	submit = SubmitField("Send OTP")
 	
 #class for form to change password
@@ -81,3 +81,7 @@ class ChangePass(FlaskForm):
 	
 class RequestOTP(FlaskForm):
 	request = SubmitField("Request")
+	
+class VerifyPassword(FlaskForm):
+	password = PasswordField("Password", validators = [DataRequired(), Length(min = 8)])
+	submit = SubmitField("Send OTP")
