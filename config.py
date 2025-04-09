@@ -1,7 +1,5 @@
 import os
-from dotenv import load_dotenv
 from helper_functions import validate_env
-load_dotenv(".env")
 
 variables =  ["SECRET_KEY", "DATABASE_URL", "EMAIL_USERNAME", "EMAIL_PASSWORD"]
 validate_env(variables)
