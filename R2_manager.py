@@ -1,12 +1,8 @@
 import boto3
-from dotenv import load_dotenv
 import os
 from botocore.exceptions import ClientError, ParamValidationError, EndpointConnectionError
 from boto3.exceptions import S3UploadFailedError
 from helper_functions import validate_env
-
-
-load_dotenv(".env")
 
 #checks if the eviroment variables are there
 variables = ["ACCESS_KEY", "R2_SECRET_KEY", "ACCOUNT_ID", "BUCKET_NAME"]

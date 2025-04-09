@@ -14,7 +14,6 @@ from form import (
 									ChangePass, RequestOTP,
 									VerifyPassword, ConfirmDelete		
 									)
-from dotenv import load_dotenv
 from MyDBAlchemy import db, Users, Uploads, Errors, init_table
 from helper_functions import (
 														login_required, 
