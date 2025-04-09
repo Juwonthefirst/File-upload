@@ -94,14 +94,14 @@ def send_mail(app, receiver):
 												recipients = [ receiver ]
 											)
 		message.body = f"""
-	You made a request to change your password. To change your password use the code below 		                  
-		                  {otp}	
+	Here is your one time password {otp}	
 	if you didn't make this request, You can ignore this email and take proper measures to properly secure your account
 """
 		mail.send(message)
 		return "Email sent"
 	except Exception as err:
-		flash("Something went wrong, try again later")
+		print(err)
+		flash("Something went wrong, try again later", "error")
 		return err
 
 
@@ -114,7 +114,7 @@ def verify_otp(otp):
 		otp_expiration_time = stored_otp.get("expires_in")
 		if otp == stored_otp_code:
 			session.pop("otp", None)
-			if current_time < otp_expiration_time:
+			if current_time <= otp_expiration_time:
 				return "verified"
 			return "expired"
 		return "Invalid"
@@ -132,7 +132,8 @@ def resend_mail(app):
 			else:	
 				flash("Something went wrong, try again later", "error")
 		else:
-			flash("Wait two minutes before requesting a new otp", "success")
+			response = "Wait two minutes before requesting for a new otp"
+			flash(response, "success")
 	else:
 		response = send_mail(app, session.get("email"))
 		if response == "Email sent":

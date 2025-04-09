@@ -93,8 +93,9 @@ label{
     border-radius: 10px;
     text-align: center;
     background-color: #FF1414;
+    align-self: flex-end;
     top: 0%;
-    width: 100%;
+    width: 85%;
     opacity: 1;
     gap: .4em;
     z-index: 1;

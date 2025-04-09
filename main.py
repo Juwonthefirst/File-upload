@@ -66,9 +66,9 @@ def login():
 												})
 						return redirect( next_page or url_for("home"))
 				except VerifyMismatchError:
-					flash("incorrect username and password combination")
+					flash("incorrect username and password combination", "error")
 			else:
-				flash("incorrect username and password combination")
+				flash("incorrect username and password combination", "error")
 	except Exception as err:
 		Errors(error = str(err)).log()			
 	return render_template("login.html", form=form)
@@ -121,11 +121,11 @@ def signup2():
 				session["email_verified"] = True
 				return redirect(url_for("signup3"))
 			case "expired":
-				flash("Expired OTP, request a new one")
+				flash("Expired OTP, request a new one", "error")
 			case "invalid":
-				flash("Invalid OTP, check and try again later")
+				flash("Invalid OTP, check and try again later", "error")
 			case _:
-				flash("Something went wrong, try again later")
+				flash("Something went wrong, try again later", "error")
 				Errors(error = str(response)).log()
 		
 	return render_template("signup(page_2).html",  form=form, request = request, title = "Stratovault - verify OTP")
@@ -166,7 +166,7 @@ def signup3():
 			except Exception as err:
 				print(err)
 				Errors(error = str(err)).log()
-				flash("Something went wrong, please try again")
+				flash("Something went wrong, please try again", "error")
 		else:
 			form.username.errors.append("Username already in use")
 			
@@ -235,7 +235,7 @@ def delete(folder, filename):
 		flash("Unable to connect to your cloud", "error")
 		return redirect(url_for("cloud", folder = folder))
 		
-	return render_template("info.html", form = form, filename = filename)
+	return render_template("confirm.html", form = form, filename = filename)
 	
 	
 @app.get("/cloud/<string:folder>/<string:filename>/preview")
@@ -255,10 +255,10 @@ def preview(folder, filename):
 				else:
 					flash("Unable to connect to your cloud", "error")
 					return redirect(url_for("cloud", folder = folder))
-		flash("Can only preview Images, Videos or Audio")
+		flash("Can only preview Images, Videos or Audio", "error")
 	except Exception as err:
 		Errors(error = str(err), user_id = user_id).log()
-		flash("Something went wrong, Please try again later")
+		flash("Something went wrong, Please try again later", "error")
 	
 	return redirect(url_for("cloud", folder = folder))	
 	
@@ -366,23 +366,19 @@ def request_password_change():
 				session["email"] = user_info.email
 				return redirect(url_for("change_password"))
 		else:
-			flash("User doesn't exist")
+			flash("User doesn't exist", "error")
 	return render_template("request_password_change.html", form = form)
 	
 
 @app.route("/password/change", methods = ["GET", "POST"])
-@login_required
+#@login_required
 def change_password():
 	user_id = session.get("id")
 	form = ChangePass()
 	request = RequestOTP()
 	if "otp" not in session:
 		return redirect(url_for("request_password_change"))
-	if request.validate_on_submit():
-		response = resend_mail(app)
-		if response != "Email sent":
-			Errors(error = str(response)).log
-	elif form.validate_on_submit():
+	if form.validate_on_submit():
 		otp = form.otp.data
 		response = verify_otp(otp)
 		match (response):
@@ -391,15 +387,20 @@ def change_password():
 				hashed_password = ph.hash(password)
 				Users.update_pass(user_id, hashed_password)
 				session.clear()
-				flash("Password change successful")
+				flash("Password change successful", "success")
 				return redirect(url_for("login"))
 			case "expired":
-				flash("Expired OTP, request a new one")
+				flash("Expired OTP, request a new one", "error")
 			case "invalid":
-				flash("Invalid OTP, check and try again later")
+				flash("Invalid OTP, check and try again later", "error")
 			case _:
-				flash("Something went wrong, try again later")
-				Errors(error = str(response)).log()	
+				flash("Something went wrong, try again later", "error")
+				Errors(error = str(response)).log()
+	elif request.validate_on_submit():
+		response = resend_mail(app)
+		if response != "Email sent":
+			Errors(error = str(response)).log
+				
 	return render_template("change_password.html", form = form, request = request)
 
 
@@ -411,11 +412,14 @@ def request_email_change():
 	if form.validate_on_submit():
 		user_details = db.session.get(Users, user_id)
 		password = form.password.data.strip()
-		if ph.verify(user_details.password, password):
-			response = send_mail(app, session.get("email"))
-			if response == "Email sent":
-				return redirect(url_for("email_change")) 
-			Errors(error = str(response), user_id = user_id).log()
+		try:
+			if ph.verify(user_details.password, password):
+				response = send_mail(app, session.get("email"))
+				if response == "Email sent":
+					return redirect(url_for("email_change")) 
+				Errors(error = str(response), user_id = user_id).log()
+		except VerifyMismatchError:
+			form.password.errors.append("Incorrect Password")
 	return render_template("email_change_request.html", form = form)
 	
 @app.route("/email/change", methods=["GET", "POST"])
@@ -426,11 +430,7 @@ def email_change():
 	form = SignupPage2()
 	if "otp" not in session:
 		return redirect(url_for("request_email_change"))
-	if request.validate_on_submit():
-		response = resend_mail(app)
-		if response != "Email sent":
-			Errors(error = str(response)).log
-	elif form.validate_on_submit():
+	if form.validate_on_submit():
 		otp = form.otp.data
 		response = verify_otp(otp)
 		match (response):
@@ -439,12 +439,16 @@ def email_change():
 				session.pop("email", None)
 				return redirect(url_for("profile"))
 			case "expired":
-				flash("Expired OTP, request a new one")
+				flash("Expired OTP, request a new one", "error")
 			case "invalid":
-				flash("Invalid OTP, check and try again later")
+				flash("Invalid OTP, check and try again later", "error")
 			case _:
-				flash("Something went wrong, try again later")
+				flash("Something went wrong, try again later", "error")
 				Errors(error = str(response)).log()
+	elif request.validate_on_submit():
+		response = resend_mail(app)
+		if response != "Email sent":
+			Errors(error = str(response)).log
 		
 	return render_template("signup(page_2).html",  form=form, request = request, title = "Stratovault - Email Change")
 		
@@ -505,7 +509,7 @@ def profile():
 			flash(response, "success")
 		except Exception as err:
 			Errors(error = str(err), user_id = user_id).log()
-			flash("Something went wrong, please try again later")
+			flash("Something went wrong, please try again later", "error")
 			
 	if lastname.validate_on_submit():
 		new_name = lastname.lastname.data
@@ -514,7 +518,7 @@ def profile():
 			flash(response, "success")
 		except Exception as err:
 			Errors(error = str(err), user_id = user_id).log()
-			flash("Something went wrong, please try again later")
+			flash("Something went wrong, please try again later", "error")
 	if email.validate_on_submit():
 		session["email"] = email.email.data.strip().capitalize()
 		return redirect(url_for("request_email_change"))

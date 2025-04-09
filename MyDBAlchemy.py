@@ -84,7 +84,7 @@ class Users(db.Model):
 		return db.session.execute(db.select(cls).where(or_(cls.username == detail, cls.email == detail))).scalar_one_or_none()
 			
 
-#class for table to store all uploads made by a user
+#class for table to store all uploads made by users
 																
 class Uploads(db.Model):
 	

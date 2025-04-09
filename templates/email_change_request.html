@@ -9,14 +9,12 @@
     <script src="https://code.iconify.design/3/3.1.0/iconify.min.js"></script>
     <link rel='stylesheet' href='https://fonts.googleapis.com/css2?family=Poppins:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,100;1,200;1,300;1,400;1,500;1,600;1,700;1,800;1,900&amp;display=swap'>
     <link rel="stylesheet" href="{{ url_for('static', filename = 'css/main.css') }}" type="text/css" media="all" />
-    <link rel="stylesheet" href="{{ url_for('static', filename = 'css/signup.css') }}" type="text/css" media="all" />
+    <link rel="stylesheet" href="{{ url_for('static', filename = 'css/login.css') }}" type="text/css" media="all" />
     <title>StratoVault - email change request</title>
 </head>
 
 <body>
-    <div class="screen">
-        <div class="greeting">
-        {% with messages=get_flashed_messages(with_categories = True) %}
+            {% with messages=get_flashed_messages(with_categories = True) %}
                 {% if messages %}
                     {% for category, message in messages %}
                         {% if category == "success" %}
@@ -33,8 +31,11 @@
                     {% endfor %}
                 {% endif %}
             {% endwith %}
-         <h2>Enter the OTP sent to your new email</h2>
+    <div class="screen">
+        <div class="header">
+        <img src="{{ url_for('static', filename='image/logo.webp') }}" alt="logo" />
         </div>
+         <h2>Enter your password to continue </h2>
         <form action="" method="post">
             {{ form.hidden_tag() }}
             <div class="form">

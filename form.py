@@ -69,7 +69,7 @@ class ChangeEmail(FlaskForm):
 
 #class for form to request password change
 class RequestChangePass(FlaskForm):
-	detail = StringField("Email", validators = [DataRequired()])
+	detail = StringField("Email or Username", validators = [DataRequired()])
 	submit = SubmitField("Send OTP")
 	
 #class for form to change password

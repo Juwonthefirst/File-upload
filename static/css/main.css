@@ -105,9 +105,10 @@ ion-icon{
     border-radius: 10px;
     text-align: center;
     background-color: #FF1414;
-    top: 0%;
+    align-self: flex-end;
+    top: 3%;
+    width: 80%;
     font-size: 18px;
-    width: 100%;
     opacity: 1;
     gap: .4em;
     z-index: 1;
