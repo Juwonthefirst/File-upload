@@ -370,7 +370,7 @@ def request_password_change():
 	
 
 @app.route("/password/change", methods = ["GET", "POST"])
-#@login_required
+@login_required
 def change_password():
 	user_id = session.get("id")
 	form = ChangePass()
@@ -484,7 +484,7 @@ def upload():
 					flash("Cloud upload successful", "success")
 				else:
 					flash("Unable to connect to the cloud", "error")
-					#file_data.delete()
+					file_data.delete()
 			except Exception as err:
 				Errors(error = str(err), user_id = user_id).log()
 				flash("Something went wrong, please try again later", "error")
@@ -539,5 +539,3 @@ def sessions():
 def logout():
 	session.clear()
 	return redirect(url_for("login"))
-		
-app.run(debug = True, host = "0.0.0.0", port = 5000)
