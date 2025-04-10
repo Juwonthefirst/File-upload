@@ -91,6 +91,7 @@ iconify-icon{
     display: flex;
     justify-content: center;
     align-items: center;
+    text-align: center;
     position: fixed;
     top: 80%;
     left: 75%;
@@ -101,6 +102,11 @@ iconify-icon{
     width: 18%;
     height: 10%;
     font-size: 45px;
+}
+
+.cloud > a{
+	align-self: center;
+	justify-self: center;
 }
 
 .folder > iconify-icon, .controls > a > iconify-icon, .controls > iconify-icon{
@@ -164,6 +170,10 @@ iconify-icon{
         opacity: .3;
         visibility: hidden;
     }
+}
+
+.flash > span{
+	font-size: 30px;
 }
 
 .flash.success{

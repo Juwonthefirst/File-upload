@@ -90,7 +90,7 @@ def send_mail(app, receiver):
 		mail = Mail(app)
 		otp = get_otp()
 		message = Message(
-												subject = "Password Change Request",
+												subject = "OTP request ",
 												recipients = [ receiver ]
 											)
 		message.body = f"""

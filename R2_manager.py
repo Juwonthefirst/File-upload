@@ -1,8 +1,12 @@
 import boto3
+from dotenv import load_dotenv
 import os
 from botocore.exceptions import ClientError, ParamValidationError, EndpointConnectionError
 from boto3.exceptions import S3UploadFailedError
 from helper_functions import validate_env
+
+
+load_dotenv(".env")
 
 #checks if the eviroment variables are there
 variables = ["ACCESS_KEY", "R2_SECRET_KEY", "ACCOUNT_ID", "BUCKET_NAME"]
@@ -15,7 +19,8 @@ class R2:
 	r2 = boto3.client("s3",
 	aws_access_key_id = os.getenv("ACCESS_KEY"),
 	aws_secret_access_key = os.getenv("R2_SECRET_KEY"),
-	endpoint_url = f"https://{os.getenv('ACCOUNT_ID')}.r2.cloudfarestorage.com"
+	endpoint_url = f"https://s3.eu-central-2.wasabisys.com"
+	#https://{os.getenv('ACCOUNT_ID')}.r2.cloudfarestorage.com
 	)
 
 
@@ -53,7 +58,7 @@ class R2:
 	@classmethod
 	def get_file(cls, filelocation):
 		try:
-			file_response = cls.r2.get_object(Bucket = cls.bucket, key = filelocation)
+			file_response = cls.r2.get_object(Bucket = cls.bucket, Key = filelocation)
 			return file_response["Body"].read()
 		except (EndpointConnectionError, TimeoutError, S3UploadFailedError):
 			return False

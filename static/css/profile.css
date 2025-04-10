@@ -115,6 +115,10 @@ label{
     }
 }
 
+.flash > span{
+	font-size: 30px;
+}
+
 .flash.success{
     background-color: #48A6A7;
     color: ghostwhite;

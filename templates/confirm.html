@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+        <script src="https://code.iconify.design/iconify-icon/2.3.0/iconify-icon.min.js"></script>
+    <link rel='stylesheet' href='https://fonts.googleapis.com/css2?family=Poppins:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,100;1,200;1,300;1,400;1,500;1,600;1,700;1,800;1,900&amp;display=swap'>
+    <link rel="stylesheet" href="{{ url_for('static', filename = 'css/profile.css') }}"  type="text/css" media="all" />
+    <title>StratoVault-CloudShare</title>
+    <style>
+        .body{
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+            overflow: hidden;
+        }
+        .header{
+            font-weight: 700;
+            font-size: 24px;
+            padding: 0.7rem;
+            color: #48A6A7;
+            background: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            height: 3%;
+            max-height: 100px;
+            width: 100%;
+        }
+        form > input {
+            background-color: white; 
+            color: red;
+            box-shadow: 4px 4px 12px rgba(0, 50, 100, 0.3);
+            border-radius: 10px;
+            border: .1em solid red;
+            padding: .7em;
+            display:flex;
+            grid-row-start: 2;
+            grid-column: span 5;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="body">
+            <div class="header">
+            {% with messages=get_flashed_messages(with_categories = True) %}
+            {% if messages %}
+            {% for category, message in messages %}
+            {% if category == "success" %}
+            <div class="flash success">
+                <span class="iconify" data-icon="material-symbols:cancel-outline-rounded"></span>
+                <p>{{ message }}</p>
+            </div>
+            {% elif category == "error" %}
+            <div class="flash">
+                <span class="iconify" data-icon="material-symbols:cancel-outline-rounded"></span>
+                <p>{{ message }}</p>
+            </div>
+            {% endif %}
+            {% endfor %}
+            {% endif %}
+            {% endwith %}
+                <p>StratoVault</p>   
+            </div>
+            <div class="main">
+                <form action="" method="post">
+                    {{ form.hidden_tag() }}
+                    <h3>Are you sure you want to delete {{ filename }}</h3>
+                    {{ form.submit }}
+                </form>                
+            </div>
+
+    </div>
+</body>
+
+</html>

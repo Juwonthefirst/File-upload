@@ -14,6 +14,7 @@ from form import (
 									ChangePass, RequestOTP,
 									VerifyPassword, ConfirmDelete		
 									)
+from dotenv import load_dotenv
 from MyDBAlchemy import db, Users, Uploads, Errors, init_table
 from helper_functions import (
 														login_required, 
@@ -108,11 +109,7 @@ def signup2():
 	
 	request = RequestOTP()
 	form = SignupPage2()
-	if request.validate_on_submit():
-		response = resend_mail(app)
-		if response != "Email sent":
-			Errors(error = str(response)).log
-	elif form.validate_on_submit():
+	if form.validate_on_submit():
 		otp = form.otp.data
 		response = verify_otp(otp)
 		match (response):
@@ -121,11 +118,15 @@ def signup2():
 				return redirect(url_for("signup3"))
 			case "expired":
 				flash("Expired OTP, request a new one", "error")
-			case "invalid":
-				flash("Invalid OTP, check and try again later", "error")
+			case "Invalid":
+				flash("Invalid OTP, check and try again", "error")
 			case _:
 				flash("Something went wrong, try again later", "error")
 				Errors(error = str(response)).log()
+	elif request.validate_on_submit():
+		response = resend_mail(app)
+		if response != "Email sent":
+			Errors(error = str(response)).log
 		
 	return render_template("signup(page_2).html",  form=form, request = request, title = "Stratovault - verify OTP")
 
@@ -275,17 +276,11 @@ def share(folder, filename):
 	if form.validate_on_submit():
 		raw_recievers = form.receiver.data
 		recievers = list(map( lambda x: x.strip().capitalize(), raw_recievers.split(",")))
-		file_location = file_row.filelocation
-		file_size = file_row.filesize
-		file_type = file_row.content_type
 		token = jwt.encode(
 				{
-					"name": user_firstname,
-					"filename" : filename,
-					"filesize": file_size, 
-					"filelocation" : file_location,
-					"filetype": file_type,
-					"recipients":  recievers,
+					"n": user_firstname,
+					"i": file_row.id,
+					"r":  recievers,
 					"exp" : datetime.now(timezone.utc) + timedelta(hours = 1) 
 				},
 				 jwt_key,
@@ -310,17 +305,18 @@ def shared(token):
 		except Exception as err:
 			Errors(error = str(err), user_id = session.get("id")).log()
 			flash("Something went wrong, please try again later", "error")
-			return redirect(url_for("cloud", folder = folder))
+			return 500
 		
-		if  response == "File not found":
-			flash("File not found", "error")
-			return redirect(url_for("cloud", folder = folder))
-			
-		elif response is None:
+		if not response:
 			flash("Unable to connect to your cloud", "error")
-			return redirect(url_for("cloud", folder = folder))
+			return request.url
+				
+		elif response == "File not found":
+			flash("File not found", "error")
+			return 404
 			
-		return send_file(
+		else:	
+			return send_file(
 										BytesIO(response),
 										download_name = file_name,
 										as_attachment = True
@@ -334,14 +330,16 @@ def shared(token):
 		return render_template("Shared.html", error = "Invalid Link")
 	except Exception as err:
 		Errors(error = str(err), user_id = user_id).log()		
-	receivers_list = file_data.get("recipients")
+	receivers_list = file_data.get("r")
 	if username in receivers_list or receivers_list == ["All"]:
 		previewable_mime = ["image/jpeg", "image/png", "image/gif", "image/webp",  "video/mp4", "video/quicktime", "video/x-msvideo","video/x-matroska", "audio/mpeg", "audio/wav", "audio/ogg"]
-		file_type = file_data.get("filetype")
-		file_size = file_data.get("filesize")
-		sender_name = file_data.get("name")
-		file_name = file_data.get("filename")
-		file_location = file_data.get("filelocation")
+		sender_name = file_data.get("n")
+		file_id = file_data.get("i")
+		file_row = db.session.get(Uploads, file_id)
+		file_location = file_row.filelocation
+		file_size = file_row.filesize
+		file_type = file_row.content_type
+		file_name = file_row.filename
 		if file_type in previewable_mime:
 			url = R2.preview(file_location, 3600)
 		else:
@@ -539,3 +537,5 @@ def sessions():
 def logout():
 	session.clear()
 	return redirect(url_for("login"))
+		
+app.run(debug = True, host = "0.0.0.0", port = 5000)

@@ -89,6 +89,10 @@ form{
     color: ghostwhite;
 }
 
+.flash > span{
+	font-size: 30px;
+}
+
 .error{
     border-color: red;
     color: red;
