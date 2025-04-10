@@ -75,8 +75,8 @@ class RequestChangePass(FlaskForm):
 #class for form to change password
 class ChangePass(FlaskForm):
 	otp = IntegerField("OTP Code", validators = [InputRequired(), validate_length])	
-	password = PasswordField("Password", validators = [DataRequired(), Length(min = 8)])
-	c_password = PasswordField("Confirm Password", validators = [DataRequired(), Length(min = 8), EqualTo("password")])
+	password = PasswordField("New Password", validators = [DataRequired(), Length(min = 8)])
+	c_password = PasswordField("Confirm New Password", validators = [DataRequired(), Length(min = 8), EqualTo("password")])
 	submit = SubmitField("Change password")
 	
 class RequestOTP(FlaskForm):

@@ -100,7 +100,6 @@ def send_mail(app, receiver):
 		mail.send(message)
 		return "Email sent"
 	except Exception as err:
-		print(err)
 		flash("Something went wrong, try again later", "error")
 		return err
 

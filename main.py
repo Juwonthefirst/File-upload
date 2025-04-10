@@ -17,7 +17,8 @@ from form import (
 from dotenv import load_dotenv
 from MyDBAlchemy import db, Users, Uploads, Errors, init_table
 from helper_functions import (
-														login_required, 
+														login_required,
+														get_mime,
 														validate_mime, 
 														send_mail, 
 														verify_otp, 
@@ -25,7 +26,7 @@ from helper_functions import (
 														resend_mail,
 														stringify_byte
 													)
-from R2_manager import R2
+from R2_manager import R2Manager
 from io import BytesIO
 import jwt
 
@@ -38,12 +39,13 @@ app.permanent_session_lifetime = timedelta(days=30)
 db.init_app(app)
 init_table(app)
 ph = PasswordHasher()
+R2 = R2Manager()
 jwt_key = app.config.get("SECRET_KEY")
 				
 				
 # routing function
 # add username/email login by accepting text then checking if its exists in the username or email database
-@app.route("/login", methods = ["GET", "POST"])
+@app.route("/login/", methods = ["GET", "POST"])
 @not_logged_in
 def login():
 	try:				
@@ -57,7 +59,7 @@ def login():
 				try:
 					if ph.verify(user_info.password, password):
 						file_sizes = Uploads.fetch("filesize", user_info.id, search = "user_id", all = True)
-						session.pop("next_page", None)
+						session.clear()
 						session.permanent = True
 						session.update({
 												"id": user_info.id,
@@ -66,15 +68,15 @@ def login():
 												})
 						return redirect( next_page or url_for("home"))
 				except VerifyMismatchError:
-					flash("incorrect username and password combination", "error")
+					flash("Incorrect username and password combination", "error")
 			else:
-				flash("incorrect username and password combination", "error")
+				flash("Incorrect username and password combination", "error")
 	except Exception as err:
 		Errors(error = str(err)).log()			
 	return render_template("login.html", form=form)
 
 
-@app.route("/signup/user-info", methods = ["GET", "POST"])
+@app.route("/signup/user-info/", methods = ["GET", "POST"])
 @not_logged_in
 def signup1():
 				
@@ -100,7 +102,7 @@ def signup1():
 	return render_template("signup(page_1).html",  form=form)
 				
 			
-@app.route("/signup/verify", methods = ["GET", "POST"])
+@app.route("/signup/verify/", methods = ["GET", "POST"])
 @not_logged_in
 def signup2():
 	
@@ -130,7 +132,7 @@ def signup2():
 		
 	return render_template("signup(page_2).html",  form=form, request = request, title = "Stratovault - verify OTP")
 
-@app.route("/signup/finish", methods = ["GET", "POST"])
+@app.route("/signup/finish/", methods = ["GET", "POST"])
 @not_logged_in
 def signup3():
 		
@@ -164,7 +166,6 @@ def signup3():
 													})
 					return redirect(next_page or url_for("home"))
 			except Exception as err:
-				print(err)
 				Errors(error = str(err)).log()
 				flash("Something went wrong, please try again", "error")
 		else:
@@ -176,12 +177,18 @@ def signup3():
 @app.get("/")
 @login_required
 def home():
-	user_id = session.get("id")												
+	user_id = session.get("id")
+	
+	# session garbage cleaner
+	session.pop("filerow", None)
+	session.pop("sender", None)
+	session.pop("preview", None)
+									
 	folders = Uploads.fetch("folder", user_id, search = "user_id", all = True)
 	return render_template("home.html", folders = list(dict.fromkeys(folders)), heading = "Stratovault")
 	
 
-@app.get("/cloud/<string:folder>")
+@app.get("/cloud/<string:folder>/")
 @login_required
 def cloud(folder):
 	user_id = session.get("id")
@@ -189,7 +196,7 @@ def cloud(folder):
 	return render_template("home.html", files=list(dict.fromkeys(files)), heading = folder, folder = folder)
 	
 # route for downloading files
-@app.get("/cloud/<string:folder>/<string:filename>/download")
+@app.get("/cloud/<string:folder>/<string:filename>/download/")
 @login_required
 def download(folder, filename):
 	user_id = session.get("id")
@@ -205,13 +212,14 @@ def download(folder, filename):
 	if  response == "File not found":
 		flash("File not found", "error")
 		return redirect(url_for("cloud", folder = folder))
+		
 	return send_file (
 		BytesIO(response),
 		download_name = filename,
 		as_attachment = True
 		)
 	
-@app.route("/cloud/<string:folder>/<string:filename>/delete", methods = ["GET", "POST"])
+@app.route("/cloud/<string:folder>/<string:filename>/delete/", methods = ["GET", "POST"])
 @login_required
 def delete(folder, filename):
 	user_id = session.get("id")
@@ -238,7 +246,7 @@ def delete(folder, filename):
 	return render_template("confirm.html", form = form, filename = filename)
 	
 	
-@app.get("/cloud/<string:folder>/<string:filename>/preview")
+@app.get("/cloud/<string:folder>/<string:filename>/preview/")
 @login_required
 def preview(folder, filename):	
 	try:
@@ -249,7 +257,7 @@ def preview(folder, filename):
 		file_location = file_row.filelocation
 		for mime in allowed_mime:
 			if file_type.startswith(mime):
-				url = R2.preview(file_location, 3600)
+				url = R2.preview(file_location)
 				if url:
 					return render_template ("preview.html", type = mime,url = url)
 				else:
@@ -262,7 +270,7 @@ def preview(folder, filename):
 	
 	return redirect(url_for("cloud", folder = folder))	
 	
-@app.route("/cloud/<string:folder>/<string:filename>/share", methods = ["GET", "POST"])
+@app.route("/cloud/<string:folder>/<string:filename>/share/", methods = ["GET", "POST"])
 @login_required
 def share(folder, filename):
 	user_id = session.get("id")
@@ -287,40 +295,52 @@ def share(folder, filename):
 				 algorithm = "HS256"
 			)
 		share_link = url_for("shared", token = token, _external = True)
-		print(share_link)
 	return render_template("cloud_share.html", link = share_link, filename = file_row.filename, filesize = stringify_byte(file_row.filesize), form = form)
 
 
-@app.route("/shared/<token>", methods = ["GET", "POST"])
+@app.route("/shared/<token>/", methods = ["GET", "POST"])
 def shared(token):
 	user_id = session.get("id")
 	username = session.get("username")
 	form = SharedFileDownload()
 	if form.validate_on_submit():
 		try:
-			response = R2.get_file(session.get("filelocation"))
-			file_name = session.get("filename")
-			session.pop("filelocation", None)
-			session.pop("filename", None)
+			file_row = session.get("filerow")
+			file_location = file_row.filelocation
+			file_name = file_row.filename
+			response = R2.get_file(file_location)
+			session.pop("filerow", None)
+			session.pop("sender", None)
+			session.pop("preview", None)
 		except Exception as err:
 			Errors(error = str(err), user_id = session.get("id")).log()
+			response = None
 			flash("Something went wrong, please try again later", "error")
-			return 500
-		
-		if not response:
-			flash("Unable to connect to your cloud", "error")
-			return request.url
-				
-		elif response == "File not found":
-			flash("File not found", "error")
-			return 404
 			
-		else:	
+		if response and response != "File not found":
 			return send_file(
 										BytesIO(response),
 										download_name = file_name,
 										as_attachment = True
 									)
+									
+		elif not response:
+			flash("Unable to connect to your cloud", "error")
+				
+		elif response == "File not found":
+			flash("File not found", "error")
+			
+		sender_name = session.get("sender")
+		url = session.get("preview")	
+		return render_template(
+										"Shared.html",
+										filename = file_name, 
+										filesize = stringify_byte(file_row.filesize), 
+										filetype = file_row.filetype, 
+										sender = sender_name, 
+										url = url, 
+										form = form
+										)
 									
 	try:
 		file_data = jwt.decode(token, jwt_key, algorithms = "HS256")
@@ -329,28 +349,37 @@ def shared(token):
 	except jwt.InvalidTokenError:
 		return render_template("Shared.html", error = "Invalid Link")
 	except Exception as err:
-		Errors(error = str(err), user_id = user_id).log()		
+		Errors(error = str(err), user_id = user_id).log()
+				
 	receivers_list = file_data.get("r")
 	if username in receivers_list or receivers_list == ["All"]:
 		previewable_mime = ["image/jpeg", "image/png", "image/gif", "image/webp",  "video/mp4", "video/quicktime", "video/x-msvideo","video/x-matroska", "audio/mpeg", "audio/wav", "audio/ogg"]
 		sender_name = file_data.get("n")
 		file_id = file_data.get("i")
 		file_row = db.session.get(Uploads, file_id)
-		file_location = file_row.filelocation
 		file_size = file_row.filesize
 		file_type = file_row.content_type
 		file_name = file_row.filename
 		if file_type in previewable_mime:
-			url = R2.preview(file_location, 3600)
+			url = R2.preview(file_location)
 		else:
 			url = "Not previewable"
-		session["filelocation"] = file_location
-		session["filename"] = file_name
-		return render_template("Shared.html", filename = file_name, filesize = stringify_byte(file_size), filetype = file_type, sender = sender_name, url = url, form = form)
+		session["filerow"] = file_row
+		session["preview"] = url
+		session["sender"] = sender_name
+		
+		return render_template(
+										"Shared.html",
+										filename = file_name, 
+										filesize = stringify_byte(file_size), 
+										filetype = file_type, 
+										sender = sender_name, url = url, 
+										form = form
+										)
 	return render_template("Shared.html", error = "Access Denied")
 
 
-@app.route("/password/change/request", methods = ["GET", "POST"])
+@app.route("/password/change/request/", methods = ["GET", "POST"])
 def request_password_change():
 	form = RequestChangePass()
 	if form.validate_on_submit():
@@ -359,7 +388,7 @@ def request_password_change():
 		if user_info:
 			response = send_mail(app, user_info.email)
 			if response == "Email sent":
-				session["id"] = user_info.id
+				session["recovery id"] = user_info.id
 				session["email"] = user_info.email
 				return redirect(url_for("change_password"))
 		else:
@@ -367,10 +396,9 @@ def request_password_change():
 	return render_template("request_password_change.html", form = form)
 	
 
-@app.route("/password/change", methods = ["GET", "POST"])
-@login_required
+@app.route("/password/change/", methods = ["GET", "POST"])
 def change_password():
-	user_id = session.get("id")
+	user_id = session.get("recovery id")
 	form = ChangePass()
 	request = RequestOTP()
 	if "otp" not in session:
@@ -401,7 +429,7 @@ def change_password():
 	return render_template("change_password.html", form = form, request = request)
 
 
-@app.route("/email/change/request", methods=["GET", "POST"])
+@app.route("/email/change/request/", methods=["GET", "POST"])
 @login_required
 def request_email_change():
 	user_id = session.get("id")
@@ -419,7 +447,7 @@ def request_email_change():
 			form.password.errors.append("Incorrect Password")
 	return render_template("email_change_request.html", form = form)
 	
-@app.route("/email/change", methods=["GET", "POST"])
+@app.route("/email/change/", methods=["GET", "POST"])
 @login_required
 def email_change():
 	user_id = session.get("id")
@@ -449,19 +477,17 @@ def email_change():
 		
 	return render_template("signup(page_2).html",  form=form, request = request, title = "Stratovault - Email Change")
 		
-@app.route("/upload", methods = ["GET", "POST"])
+@app.route("/upload/", methods = ["GET", "POST"])
 @login_required
 def upload():
 	user_id = session.get("id")
-	username = session.get("id")
 	upload = FileUpload()
-	file = upload.file.data
 	if upload.validate_on_submit():
 		file = upload.file.data
 		mime_type = validate_mime(file)
 		if mime_type:
 			folder = request.form.get("folder").strip()
-			file_name = file.filename
+			file_name = file.filename.replace("/", "-")
 			file_size = len(file.read())
 			file.seek(0)
 			file_data = Uploads(
@@ -487,12 +513,22 @@ def upload():
 				Errors(error = str(err), user_id = user_id).log()
 				flash("Something went wrong, please try again later", "error")
 		else:
-			flash("File type not supported", "error")
+			mime = get_mime(file)
+			if mime:
+				flash(f"{mime} not supported", "error")
+			else:
+				flash(f"File type not supported", "error")
 			
-	folders = Uploads.fetch("folder", user_id, search = "user_id", all = True)			
-	return render_template("upload.html", upload = upload, total_file_size = stringify_byte(session.get("total_file_size")), folders = list(dict.fromkeys(folders)))
+	folders = Uploads.fetch("folder", user_id, search = "user_id", all = True)
+			
+	return render_template(
+												"upload.html", 
+												upload = upload, 
+												total_file_size = stringify_byte(session.get("total_file_size")), 
+												folders = list(dict.fromkeys(folders))
+												)
 	
-@app.route("/profile", methods = ["GET", "POST"])
+@app.route("/profile/", methods = ["GET", "POST"])
 @login_required
 def profile():
 	user_id = session.get("id")	
@@ -500,7 +536,7 @@ def profile():
 	lastname = ChangeLastname()
 	email = ChangeEmail()
 	if firstname.validate_on_submit():
-		new_name = firstname.firstname.data
+		new_name = firstname.firstname.data.strip()
 		try:
 			response = Users.update_firstname(user_id, new_name)
 			flash(response, "success")
@@ -509,7 +545,7 @@ def profile():
 			flash("Something went wrong, please try again later", "error")
 			
 	if lastname.validate_on_submit():
-		new_name = lastname.lastname.data
+		new_name = lastname.lastname.data.strip()
 		try:
 			response = Users.update_lastname(user_id, new_name)
 			flash(response, "success")
@@ -525,14 +561,15 @@ def profile():
 	lastname.lastname.data = user_detail.lastname
 	email.email.data = user_detail.email
 	
-	return render_template("profile.html", firstname = firstname, lastname = lastname, email = email)
+	return render_template(
+												"profile.html", 
+												firstname = firstname,
+												lastname = lastname,
+												email = email
+												)
 
-@app.get("/session")
-#@login_required
-def sessions():
-	return dict(session)
-	
-@app.route("/logout")
+
+@app.route("/logout/")
 @login_required
 def logout():
 	session.clear()

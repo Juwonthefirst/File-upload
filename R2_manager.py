@@ -14,7 +14,7 @@ variables = ["ACCESS_KEY", "R2_SECRET_KEY", "ACCOUNT_ID", "BUCKET_NAME"]
 validate_env(variables)
 
 #class to interact with cloudfare r2
-class R2:
+class R2Manager:
 	bucket = os.getenv("BUCKET_NAME")
 	r2 = boto3.client("s3",
 	aws_access_key_id = os.getenv("ACCESS_KEY"),
@@ -24,7 +24,6 @@ class R2:
 	)
 
 
-	@classmethod
 	#replace with tus for pausable upload
 	def upload(cls, file, stored_filename):
 		try:
@@ -34,8 +33,7 @@ class R2:
 		return True
 		
 		
-	@classmethod
-	def preview(cls, filelocation, expiration):
+	def preview(cls, filelocation, expiration = 3600):
 		try:
 			return cls.r2.generate_presigned_url(
 			"get_object",
@@ -47,7 +45,7 @@ class R2:
 		except (EndpointConnectionError, TimeoutError, S3UploadFailedError):
 			return False
 			
-	@classmethod
+
 	def delete(cls, filelocation):
 		try:
 			cls.r2.delete_object(Bucket = cls.bucket, Key = filelocation)
@@ -55,7 +53,7 @@ class R2:
 		except (EndpointConnectionError, TimeoutError, S3UploadFailedError):
 			return False
 	
-	@classmethod
+	
 	def get_file(cls, filelocation):
 		try:
 			file_response = cls.r2.get_object(Bucket = cls.bucket, Key = filelocation)
