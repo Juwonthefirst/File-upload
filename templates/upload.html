@@ -35,18 +35,27 @@
             {{ upload.hidden_tag() }}
             {{ upload.file }}
             {% if not upload.file.errors%}
-            <p> *Accepted files include jpeg ,  png ,  gif ,  webp ,  pdf ,  docx ,  xlsx ,  pptx ,  txt ,  mp4 ,  mov ,  avi ,  mkv ,  mp3 ,  wav ,  ogg ,  zip ,  rar ,  7z ,  tar.gz ,  csv ,  json</p>
+            <p class="extra"> *Accepted files include jpeg ,  png ,  gif ,  webp ,  pdf ,  docx ,  xlsx ,  pptx ,  txt ,  mp4 ,  mov ,  avi ,  mkv ,  mp3 ,  wav ,  ogg ,  zip ,  rar ,  7z ,  tar.gz ,  csv ,  json</p>
             {% endif %}
             {% for error in upload.file.errors %}
                 <p class="error">{{ error }}</p>
             {% endfor %}
             <label for="Folder">what folder should your file be stored in</label>
-            <input list="folder" id="Folder" name="folder" required placeholder="Enter Folder name....">
+            <input list="folder" class="input" name="folder" required placeholder="Enter Folder name....">
             <datalist id="folder">
                 {% for folder in folders%}
-                    <option value="{{ folder }}">Juwon</option>
+                    <option value="{{ folder }}">{{ folder }}</option>
                 {% endfor %}
             </datalist>
+            {{ upload.filename.label }}
+            {% if upload.filename.errors %}
+            	{{ upload.filename(class="input error", placeholder="Enter a name for your file") }}
+            	{% for error in upload.filename.errors %}
+                    <p class="error">{{ error }}</p>
+            	{% endfor %}
+            {% else %}
+            		{{ upload.filename(class="input", placeholder="Enter a name for your file") }}
+            {% endif %}
             {{ upload.upload(class="submit") }}
         </form>
         <div class="file">

@@ -1,5 +1,5 @@
 from flask import Flask, request, render_template, redirect, url_for, flash, session, send_file
-from werkzeug.utils import secure_filename
+from sqlalchemy.exc import IntegrityError, PendingRollbackError
 from datetime import timedelta, datetime, timezone
 from argon2 import PasswordHasher
 from argon2.exceptions import VerifyMismatchError
@@ -24,11 +24,12 @@ from helper_functions import (
 														verify_otp, 
 														not_logged_in, 
 														resend_mail,
-														stringify_byte
+														stringify_byte,
+														add_extension
 													)
 from R2_manager import R2Manager
 from io import BytesIO
-import jwt
+import jwt, 
 
 # flask configuration settings
 app=Flask(__name__)
@@ -183,17 +184,37 @@ def home():
 	session.pop("filerow", None)
 	session.pop("sender", None)
 	session.pop("preview", None)
-									
+	
+	profile_picture = R2.preview(f"profile_pictures/{user_id}", expiration = 30)
+	if not profile_picture:
+		profile_picture = url_for("static", filename = "image/logo.webp")
+										
 	folders = Uploads.fetch("folder", user_id, search = "user_id", all = True)
-	return render_template("home.html", folders = list(dict.fromkeys(folders)), heading = "Stratovault")
+	return render_template(
+												"home.html", 
+												folders = list(dict.fromkeys(folders)), 
+												heading = "Stratovault", 
+												profile_picture = profile_picture
+											)
 	
 
 @app.get("/cloud/<string:folder>/")
 @login_required
 def cloud(folder):
 	user_id = session.get("id")
+	
+	profile_picture = R2.preview(f"profile_pictures/{user_id}", expiration = 30)
+	if not profile_picture:
+		profile_picture = url_for("static", filename = "image/logo.webp")
+		
 	files = Uploads.fetch_filename(user_id, folder, all = True)
-	return render_template("home.html", files=list(dict.fromkeys(files)), heading = folder, folder = folder)
+	return render_template(
+												"home.html", 
+												files=list(dict.fromkeys(files)), 
+												heading = folder, 
+												folder = folder,
+												profile_picture = profile_picture
+											)
 	
 # route for downloading files
 @app.get("/cloud/<string:folder>/<string:filename>/download/")
@@ -319,10 +340,10 @@ def shared(token):
 			
 		if response and response != "File not found":
 			return send_file(
-										BytesIO(response),
-										download_name = file_name,
-										as_attachment = True
-									)
+											BytesIO(response),
+											download_name = file_name,
+											as_attachment = True
+										)
 									
 		elif not response:
 			flash("Unable to connect to your cloud", "error")
@@ -333,14 +354,14 @@ def shared(token):
 		sender_name = session.get("sender")
 		url = session.get("preview")	
 		return render_template(
-										"Shared.html",
-										filename = file_name, 
-										filesize = stringify_byte(file_row.filesize), 
-										filetype = file_row.filetype, 
-										sender = sender_name, 
-										url = url, 
-										form = form
-										)
+													"Shared.html",
+													filename = file_name, 
+													filesize = stringify_byte(file_row.filesize), 
+													filetype = file_row.filetype, 
+													sender = sender_name, 
+													url = url, 
+													form = form
+												)
 									
 	try:
 		file_data = jwt.decode(token, jwt_key, algorithms = "HS256")
@@ -369,13 +390,13 @@ def shared(token):
 		session["sender"] = sender_name
 		
 		return render_template(
-										"Shared.html",
-										filename = file_name, 
-										filesize = stringify_byte(file_size), 
-										filetype = file_type, 
-										sender = sender_name, url = url, 
-										form = form
-										)
+													"Shared.html",
+													filename = file_name, 
+													filesize = stringify_byte(file_size), 
+													filetype = file_type, 
+													sender = sender_name, url = url, 
+													form = form
+												)
 	return render_template("Shared.html", error = "Access Denied")
 
 
@@ -486,8 +507,11 @@ def upload():
 		file = upload.file.data
 		mime_type = validate_mime(file)
 		if mime_type:
-			folder = request.form.get("folder").strip()
-			file_name = file.filename.replace("/", "-")
+			folder = request.form.get("folder").strip().replace("/", "-")
+			file_name = add_extension(upload.filename.data.strip(), file.mimetype)
+			if not file_name:
+				file_name = file.filename
+			file_name = file_name.replace("/", "-")
 			file_size = len(file.read())
 			file.seek(0)
 			file_data = Uploads(
@@ -498,35 +522,40 @@ def upload():
 													content_type = mime_type, 
 													user_id = user_id
 												)
-			file_data.save()
-			file_location = f"{user_id}/{folder}/{file_data.id}"
-			file_data.filelocation = file_location
-			db.session.commit()
-			try:
-				if R2.upload(file, file_location):
-					session["total_file_size"] += file_size
-					flash("Cloud upload successful", "success")
+			try:						
+				if file_data.save():
+					file_location = f"{user_id}/{folder}/{file_data.id}"
+					file_data.filelocation = file_location
+					db.session.commit()
+					if R2.upload(file, file_location):
+						session["total_file_size"] += file_size
+						flash("Cloud upload successful", "success")
+					else:
+						flash("Unable to connect to the cloud", "error")
+						#file_data.delete()
 				else:
-					flash("Unable to connect to the cloud", "error")
-					file_data.delete()
+					flash("File already exists", "error")
+					upload.filename.errors.append("Change File name ")
 			except Exception as err:
-				Errors(error = str(err), user_id = user_id).log()
-				flash("Something went wrong, please try again later", "error")
+					Errors(error = str(err), user_id = user_id).log()
+					flash("Something went wrong, please try again later", "error")
+			
 		else:
 			mime = get_mime(file)
 			if mime:
 				flash(f"{mime} not supported", "error")
 			else:
 				flash(f"File type not supported", "error")
-			
+				
 	folders = Uploads.fetch("folder", user_id, search = "user_id", all = True)
-			
+				
 	return render_template(
 												"upload.html", 
 												upload = upload, 
 												total_file_size = stringify_byte(session.get("total_file_size")), 
 												folders = list(dict.fromkeys(folders))
-												)
+											)
+				
 	
 @app.route("/profile/", methods = ["GET", "POST"])
 @login_required
@@ -535,39 +564,49 @@ def profile():
 	firstname = ChangeFirstname()
 	lastname = ChangeLastname()
 	email = ChangeEmail()
+	user_detail = db.session.get(Users, user_id)
+	
 	if firstname.validate_on_submit():
 		new_name = firstname.firstname.data.strip()
-		try:
-			response = Users.update_firstname(user_id, new_name)
-			flash(response, "success")
-		except Exception as err:
-			Errors(error = str(err), user_id = user_id).log()
-			flash("Something went wrong, please try again later", "error")
-			
+		if new_name != user_detail.firstname:
+			try:
+				response = Users.update_firstname(user_id, new_name)
+				flash(response, "success")
+			except Exception as err:
+				Errors(error = str(err), user_id = user_id).log()
+				flash("Something went wrong, please try again later", "error")
+				
 	if lastname.validate_on_submit():
 		new_name = lastname.lastname.data.strip()
-		try:
-			response = Users.update_lastname(user_id, new_name)
-			flash(response, "success")
-		except Exception as err:
-			Errors(error = str(err), user_id = user_id).log()
-			flash("Something went wrong, please try again later", "error")
+		if new_name != user_detail.lastname:
+			try:
+				response = Users.update_lastname(user_id, new_name)
+				flash(response, "success")
+			except Exception as err:
+				Errors(error = str(err), user_id = user_id).log()
+				flash("Something went wrong, please try again later", "error")
+
 	if email.validate_on_submit():
-		session["email"] = email.email.data.strip().capitalize()
-		return redirect(url_for("request_email_change"))
+		new_email = email.email.data.strip().capitalize()
+		if new_email != user_detail.email
+			session["email"] = new_email
+			return redirect(url_for("request_email_change"))
 		
-	user_detail = db.session.get(Users, user_id)	
 	firstname.firstname.data = user_detail.firstname
 	lastname.lastname.data = user_detail.lastname
 	email.email.data = user_detail.email
+	profile_picture = R2.preview(f"profile_pictures/{user_id}", expiration = 30)
+	if not profile_picture:
+		profile_picture = url_for("static", filename = "image/logo.webp")
 	
 	return render_template(
 												"profile.html", 
 												firstname = firstname,
 												lastname = lastname,
-												email = email
-												)
-
+												email = email,
+												profile_picture = profile_picture
+											)
+	
 
 @app.route("/logout/")
 @login_required

@@ -31,7 +31,7 @@ class Users(db.Model):
 			db.session.commit()
 			return f"{self.username} successfully added to database"
 		except IntegrityError:
-			return False	
+			db.session.rollback()
 			
 	def delete(self):
 		db.session.delete(self)
@@ -110,7 +110,7 @@ class Uploads(db.Model):
 			db.session.commit()
 			return f"{self.filename} uploaded successfully"
 		except IntegrityError:
-			return False
+			db.session.rollback()
 		
 	def delete(self):
 		db.session.delete(self)

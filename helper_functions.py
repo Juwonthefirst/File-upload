@@ -3,7 +3,7 @@ from functools import wraps
 from flask import session, request, redirect, url_for, flash
 from flask_mail import Mail, Message
 from datetime import datetime, timedelta, timezone
-import random
+import random, gzip, json, base64
 
 #validating env
 def validate_env(variables):
@@ -148,4 +148,18 @@ def stringify_byte(filesize):
 		return f"{round(filesize/1000, 2)} KB"
 	elif filesize < 900:
 		return f"{filesize} B"
-	
+
+def add_extension(filename, mime_type):
+	if not filename:
+		return None
+	extensions = {
+	 "image/jpeg" :".jpg", "image/png": ".png", "image/gif": ".gif", "image/webp": ".webp",
+	 "application/pdf": ".pdf","application/vnd.openxmlformats-officedocument.wordprocessingml.document": ".docx",
+	"application/vnd.openxmlformats-officedocument.spreadsheetml.sheet": ".xlsx",
+	"application/vnd.openxmlformats-officedocument.presentationml.presentation": ".pptx",
+	"text/plain": ".txt", "video/mp4": ".mp4", "video/quicktime": ".mov", "video/x-msvideo": ".avi",
+		"video/x-matroska": ".mkv", "audio/mpeg": ".mp3", "audio/wav": ".wav","audio/ogg":  ".ogg",
+	 "application/zip": ".zip", "application/vnd.rar": ".rar", "application/x-7z-compressed": ".7z",
+	"application/gzip": ".tar.gz", "text/csv": ".csv", "application/json": ".json"
+}
+	return filename + extensions[mime_type]

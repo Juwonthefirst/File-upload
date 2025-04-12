@@ -30,7 +30,7 @@
                     {% endfor %}
                 {% endif %}
             {% endwith %}
-        <img src="{{ url_for('static', filename = 'image/logo.webp') }}" alt="profile picture" />
+        <img src="{{ profile_picture }}" alt="profile picture" />
         <div class="Firstname field">
             <form action="" method="post">
                 {{ firstname.hidden_tag() }}

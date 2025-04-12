@@ -41,6 +41,7 @@ class SignupPage3(FlaskForm):
 class FileUpload(FlaskForm):
 	
 	file = FileField("File upload", validators = [FileRequired(),FileAllowed(["jpg", "jpeg", "png", "gif", "webp", "pdf", "docx", "xlsx", "pptx", "txt", "mp4", "mov", "avi", "mkv", "mp3", "wav", "ogg", "zip", "rar", "7z", "tar.gz", "csv", "json"], "Filetype not supported, try putting it into a zip file then try again")])
+	filename = StringField("File name(optional)")
 	upload = SubmitField("Upload")
 	
 #class for form for sharing files

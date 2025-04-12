@@ -16,12 +16,13 @@ validate_env(variables)
 #class to interact with cloudfare r2
 class R2Manager:
 	bucket = os.getenv("BUCKET_NAME")
-	r2 = boto3.client("s3",
-	aws_access_key_id = os.getenv("ACCESS_KEY"),
-	aws_secret_access_key = os.getenv("R2_SECRET_KEY"),
-	endpoint_url = f"https://s3.eu-central-2.wasabisys.com"
+	r2 = boto3.client(
+									"s3",
+									aws_access_key_id = os.getenv("ACCESS_KEY"),
+									aws_secret_access_key = os.getenv("R2_SECRET_KEY"),
+									endpoint_url = f"https://s3.eu-central-2.wasabisys.com"
 	#https://{os.getenv('ACCOUNT_ID')}.r2.cloudfarestorage.com
-	)
+								)
 
 
 	#replace with tus for pausable upload

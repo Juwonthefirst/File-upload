@@ -22,13 +22,17 @@ input[type="file"]{
     align-self: center;
 }
 
-input[list="folder"]{
+.input{
     width: 50vw;
     padding: 5px;
     border-radius: 5px;
     border: 2px solid cadetblue;
     box-shadow: 4px 4px 12px rgba(0, 50, 100, 0.2);
 
+}
+
+.input:focus{
+	outline: none
 }
 form{
     display: flex;
@@ -96,4 +100,10 @@ form{
 .error{
     border-color: red;
     color: red;
+    margin: -7px;
+}
+
+.extra{
+	margin: -10px;
+	font-size:12px;
 }
