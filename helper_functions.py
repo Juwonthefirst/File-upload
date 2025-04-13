@@ -116,7 +116,7 @@ def verify_otp(otp):
 			if current_time <= otp_expiration_time:
 				return "verified"
 			return "expired"
-		return "Invalid"
+		return "invalid"
 	except Exception as err:
 		return err
 		

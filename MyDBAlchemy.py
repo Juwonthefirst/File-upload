@@ -1,5 +1,5 @@
 from flask_sqlalchemy import SQLAlchemy
-from sqlalchemy import Integer, String, DateTime, Text, ForeignKey, Update, and_, or_
+from sqlalchemy import Integer, String, DateTime, Text, Boolean, ForeignKey, Update, and_, or_
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 from sqlalchemy.sql import func
 from sqlalchemy.exc import IntegrityError
@@ -18,6 +18,7 @@ class Users(db.Model):
 	username: Mapped[str] = mapped_column(String(20), unique = True, nullable = False)
 	email: Mapped[str] = mapped_column(String(255), unique = True, nullable = False)
 	password: Mapped[str] = mapped_column(String(255), nullable = False)
+	#has_profile_picture: Mapped[bool] = mapped_column(Boolean, default = False, nullable = False)
 	created_at: Mapped[datetime] = mapped_column(DateTime, server_default = func.now())
 	uploads:Mapped[List["Uploads"]] = relationship("Uploads", backref="uploader", lazy = "dynamic", cascade = "all, delete-orphan")
 	

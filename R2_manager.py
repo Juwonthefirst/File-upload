@@ -26,6 +26,7 @@ class R2Manager:
 
 
 	#replace with tus for pausable upload
+	@classmethod
 	def upload(cls, file, stored_filename):
 		try:
 			cls.r2.upload_fileobj(file, cls.bucket, stored_filename)
@@ -33,20 +34,22 @@ class R2Manager:
 			return False
 		return True
 		
-		
+	@classmethod	
 	def preview(cls, filelocation, expiration = 3600):
 		try:
 			return cls.r2.generate_presigned_url(
-			"get_object",
-			Params={
-				"Bucket": cls.bucket,
-				"Key": filelocation,
-				"ResponseContentDisposition": "inline"},
-			ExpiresIn=expiration)
+																				"get_object",
+																				Params={
+																									"Bucket": cls.bucket,
+																									"Key": filelocation,
+																									"ResponseContentDisposition": "inline"
+																								},
+																				ExpiresIn = expiration
+																			)
 		except (EndpointConnectionError, TimeoutError, S3UploadFailedError):
 			return False
 			
-
+	@classmethod
 	def delete(cls, filelocation):
 		try:
 			cls.r2.delete_object(Bucket = cls.bucket, Key = filelocation)
@@ -54,7 +57,7 @@ class R2Manager:
 		except (EndpointConnectionError, TimeoutError, S3UploadFailedError):
 			return False
 	
-	
+	@classmethod
 	def get_file(cls, filelocation):
 		try:
 			file_response = cls.r2.get_object(Bucket = cls.bucket, Key = filelocation)
@@ -64,3 +67,12 @@ class R2Manager:
 		except ClientError as e:
 			if e.response["Error"]["Code"] == "404":
 				return "File not found"
+	
+	@classmethod
+	def has(cls, filelocation):
+		try:
+			if cls.r2.head_object(Bucket = cls.bucket, Key = filelocation):
+				return True
+		except:
+			return False
+			

@@ -1,5 +1,5 @@
 from flask import Flask, request, render_template, redirect, url_for, flash, session, send_file
-from sqlalchemy.exc import IntegrityError, PendingRollbackError
+from redis import Redis, exceptions
 from datetime import timedelta, datetime, timezone
 from argon2 import PasswordHasher
 from argon2.exceptions import VerifyMismatchError
@@ -27,9 +27,9 @@ from helper_functions import (
 														stringify_byte,
 														add_extension
 													)
-from R2_manager import R2Manager
+from R2_manager import R2Manager as R2
 from io import BytesIO
-import jwt, 
+import jwt, secrets
 
 # flask configuration settings
 app=Flask(__name__)
@@ -40,12 +40,11 @@ app.permanent_session_lifetime = timedelta(days=30)
 db.init_app(app)
 init_table(app)
 ph = PasswordHasher()
-R2 = R2Manager()
 jwt_key = app.config.get("SECRET_KEY")
-				
-				
+cache = Redis(host = "localhost", port = 6379, db = 0)
+
 # routing function
-# add username/email login by accepting text then checking if its exists in the username or email database
+
 @app.route("/login/", methods = ["GET", "POST"])
 @not_logged_in
 def login():
@@ -121,7 +120,7 @@ def signup2():
 				return redirect(url_for("signup3"))
 			case "expired":
 				flash("Expired OTP, request a new one", "error")
-			case "Invalid":
+			case "invalid":
 				flash("Invalid OTP, check and try again", "error")
 			case _:
 				flash("Something went wrong, try again later", "error")
@@ -153,7 +152,7 @@ def signup3():
 												lastname = session.get("last_name"), 
 												email = session.get("email"),
 												password = hashed_password
-												)
+											)
 			try:
 				if not new_user.save():
 					form.username.errors.append("Unknown error, Try logging in")
@@ -180,15 +179,12 @@ def signup3():
 def home():
 	user_id = session.get("id")
 	
-	# session garbage cleaner
-	session.pop("filerow", None)
-	session.pop("sender", None)
-	session.pop("preview", None)
-	
-	profile_picture = R2.preview(f"profile_pictures/{user_id}", expiration = 30)
-	if not profile_picture:
-		profile_picture = url_for("static", filename = "image/logo.webp")
-										
+	if R2.has(f"profile_pictures/{user_id}"):
+		profile_picture = R2.preview(f"profile_pictures/{user_id}", expiration = 30)
+	else:
+		profile_picture= url_for("static", filename = "image/logo.webp")
+						
+							
 	folders = Uploads.fetch("folder", user_id, search = "user_id", all = True)
 	return render_template(
 												"home.html", 
@@ -203,9 +199,10 @@ def home():
 def cloud(folder):
 	user_id = session.get("id")
 	
-	profile_picture = R2.preview(f"profile_pictures/{user_id}", expiration = 30)
-	if not profile_picture:
-		profile_picture = url_for("static", filename = "image/logo.webp")
+	if R2.has(f"profile_pictures/{user_id}"):
+		profile_picture = R2.preview(f"profile_pictures/{user_id}", expiration = 30)
+	else:
+		profile_picture= url_for("static", filename = "image/logo.webp")
 		
 	files = Uploads.fetch_filename(user_id, folder, all = True)
 	return render_template(
@@ -235,10 +232,10 @@ def download(folder, filename):
 		return redirect(url_for("cloud", folder = folder))
 		
 	return send_file (
-		BytesIO(response),
-		download_name = filename,
-		as_attachment = True
-		)
+									BytesIO(response),
+									download_name = filename,
+									as_attachment = True
+								)
 	
 @app.route("/cloud/<string:folder>/<string:filename>/delete/", methods = ["GET", "POST"])
 @login_required
@@ -305,18 +302,34 @@ def share(folder, filename):
 	if form.validate_on_submit():
 		raw_recievers = form.receiver.data
 		recievers = list(map( lambda x: x.strip().capitalize(), raw_recievers.split(",")))
-		token = jwt.encode(
-				{
-					"n": user_firstname,
-					"i": file_row.id,
-					"r":  recievers,
-					"exp" : datetime.now(timezone.utc) + timedelta(hours = 1) 
-				},
-				 jwt_key,
-				 algorithm = "HS256"
-			)
-		share_link = url_for("shared", token = token, _external = True)
-	return render_template("cloud_share.html", link = share_link, filename = file_row.filename, filesize = stringify_byte(file_row.filesize), form = form)
+		previewable_mime = ["image/jpeg", "image/png", "image/gif", "image/webp",  "video/mp4", "video/quicktime", "video/x-msvideo","video/x-matroska", "audio/mpeg", "audio/wav", "audio/ogg"]
+		if file_row.content_type in previewable_mime:
+			url = R2.preview(file_row.filelocation)
+		else:
+			url = "Not previewable"
+		try:
+			token = secrets.token_hex(4)
+			cache.hset(token, mapping = {
+																	"sender_name": user_firstname,
+																	"filename": file_row.filename,
+																	"filelocation": file_row.filelocation,
+																	"filesize": stringify_byte(file_row.filesize),
+																	"filetype": file_row.content_type,
+																	"url": url,
+																	"receivers": ",".join(recievers)
+																}
+												)
+			cache.expire(token, 3600)
+			share_link = url_for("shared", token = token, _external = True)
+		except exceptions.ConnectionError:
+			flash("Unable to generate link at the moment", "error")
+	return render_template(
+												"cloud_share.html", 
+												link = share_link, 
+												filename = file_row.filename, 
+												filesize = stringify_byte(file_row.filesize), 
+												form = form
+											)
 
 
 @app.route("/shared/<token>/", methods = ["GET", "POST"])
@@ -326,13 +339,9 @@ def shared(token):
 	form = SharedFileDownload()
 	if form.validate_on_submit():
 		try:
-			file_row = session.get("filerow")
-			file_location = file_row.filelocation
-			file_name = file_row.filename
+			file_location = cache.hget(token, "filelocation").decode()
+			file_name = cache.hget(token, "filename").decode()
 			response = R2.get_file(file_location)
-			session.pop("filerow", None)
-			session.pop("sender", None)
-			session.pop("preview", None)
 		except Exception as err:
 			Errors(error = str(err), user_id = session.get("id")).log()
 			response = None
@@ -346,57 +355,52 @@ def shared(token):
 										)
 									
 		elif not response:
-			flash("Unable to connect to your cloud", "error")
+			flash("Unable to connect to sender's cloud", "error")
 				
 		elif response == "File not found":
 			flash("File not found", "error")
 			
-		sender_name = session.get("sender")
-		url = session.get("preview")	
+		sender_name = cache.hget(token, "sender_name").decode()
+		url = cache.hget(token, "url").decode()
 		return render_template(
 													"Shared.html",
 													filename = file_name, 
-													filesize = stringify_byte(file_row.filesize), 
-													filetype = file_row.filetype, 
+													filesize = cache.hget(token, "filesize").decode(), 
+													filetype = cache.hget(token, "filetype").decode(), 
 													sender = sender_name, 
 													url = url, 
 													form = form
 												)
 									
 	try:
-		file_data = jwt.decode(token, jwt_key, algorithms = "HS256")
-	except jwt.ExpiredSignatureError:
-		return render_template("Shared.html", error = "Expired Link")
-	except jwt.InvalidTokenError:
-		return render_template("Shared.html", error = "Invalid Link")
+		if not cache.exists(token):
+			return render_template("Shared.html", error = "Invalid Link")
+			#return render_template("Shared.html", error = "Expired Link")
+				
+		receivers_list = cache.hget(token, "receivers").decode()
+		if username in receivers_list.split(",") or receivers_list == "All":
+			sender_name = cache.hget(token, "sender_name").decode()
+			file_size = cache.hget(token, "filesize").decode()
+			file_type = cache.hget(token, "filetype").decode()
+			file_name = cache.hget(token, "filename").decode()
+			file_location = cache.hget(token, "filelocation").decode()
+			url = cache.hget(token, "url").decode()
+			
+			return render_template(
+														"Shared.html",
+														filename = file_name, 
+														filesize = file_size, 
+														filetype = file_type, 
+														sender = sender_name, 
+														url = url, 
+														form = form
+													)
+													
+	except exceptions.ConnectionError:
+			flash("Unable to retrieve data at the moment", "error")
 	except Exception as err:
 		Errors(error = str(err), user_id = user_id).log()
-				
-	receivers_list = file_data.get("r")
-	if username in receivers_list or receivers_list == ["All"]:
-		previewable_mime = ["image/jpeg", "image/png", "image/gif", "image/webp",  "video/mp4", "video/quicktime", "video/x-msvideo","video/x-matroska", "audio/mpeg", "audio/wav", "audio/ogg"]
-		sender_name = file_data.get("n")
-		file_id = file_data.get("i")
-		file_row = db.session.get(Uploads, file_id)
-		file_size = file_row.filesize
-		file_type = file_row.content_type
-		file_name = file_row.filename
-		if file_type in previewable_mime:
-			url = R2.preview(file_location)
-		else:
-			url = "Not previewable"
-		session["filerow"] = file_row
-		session["preview"] = url
-		session["sender"] = sender_name
-		
-		return render_template(
-													"Shared.html",
-													filename = file_name, 
-													filesize = stringify_byte(file_size), 
-													filetype = file_type, 
-													sender = sender_name, url = url, 
-													form = form
-												)
+												
 	return render_template("Shared.html", error = "Access Denied")
 
 
@@ -588,16 +592,18 @@ def profile():
 
 	if email.validate_on_submit():
 		new_email = email.email.data.strip().capitalize()
-		if new_email != user_detail.email
+		if new_email != user_detail.email:
 			session["email"] = new_email
 			return redirect(url_for("request_email_change"))
 		
 	firstname.firstname.data = user_detail.firstname
 	lastname.lastname.data = user_detail.lastname
 	email.email.data = user_detail.email
-	profile_picture = R2.preview(f"profile_pictures/{user_id}", expiration = 30)
-	if not profile_picture:
-		profile_picture = url_for("static", filename = "image/logo.webp")
+	
+	if R2.has(f"profile_pictures/{user_id}"):
+		profile_picture = R2.preview(f"profile_pictures/{user_id}", expiration = 30)
+	else:
+		profile_picture= url_for("static", filename = "image/logo.webp")
 	
 	return render_template(
 												"profile.html", 
