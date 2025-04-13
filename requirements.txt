@@ -8,7 +8,7 @@ wtforms==3.2.1
 boto3==1.37.4
 psycopg2
 email-validator==2.2.0
-PyJWT==2.10.1
+redis==5.2.1/
 filetype==1.2.0
 puremagic==1.28
 Flask-Mail==0.10.0
