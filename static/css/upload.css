@@ -1,5 +1,6 @@
 *{
     margin: 0;
+    font-family: 'Poppins'
 }
 .errors{
 	color: red;
@@ -9,10 +10,10 @@
     max-height: 720px;
     background-color: floralwhite;
     overflow: hidden;
-    /*padding: 20px;*/
 }
 
-input[type="file"]{
+.upload-area, .upload-field{
+	display: inline-block;
     width: 70vw;
     height: 30vh;
     border: 2px solid cadetblue;
@@ -21,6 +22,10 @@ input[type="file"]{
     justify-self: center;
     align-self: center;
 }
+.upload-area{
+	opacity: 0;
+}
+
 
 .input{
     width: 50vw;
@@ -94,7 +99,7 @@ form{
 }
 
 .flash > span{
-	font-size: 30px;
+	font-size: 70px;
 }
 
 .error{

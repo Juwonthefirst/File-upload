@@ -18,7 +18,7 @@ class Users(db.Model):
 	username: Mapped[str] = mapped_column(String(20), unique = True, nullable = False)
 	email: Mapped[str] = mapped_column(String(255), unique = True, nullable = False)
 	password: Mapped[str] = mapped_column(String(255), nullable = False)
-	#has_profile_picture: Mapped[bool] = mapped_column(Boolean, default = False, nullable = False)
+	has_profile_picture: Mapped[bool] = mapped_column(Boolean, default = False, nullable = False)
 	created_at: Mapped[datetime] = mapped_column(DateTime, server_default = func.now())
 	uploads:Mapped[List["Uploads"]] = relationship("Uploads", backref="uploader", lazy = "dynamic", cascade = "all, delete-orphan")
 	
@@ -73,7 +73,7 @@ class Users(db.Model):
 	# to fetch user details from the database			
 	@classmethod		
 	def fetch(cls, area, user_detail, search = None):
-		if area in ["password", "username", "email"] and search in ["password", "username", "email", None]:
+		if area in ["password", "username", "email", "has_profile_picture"] and search in ["id", "has_profile_picture", "password", "username", "email", None]:
 			if not search:
 				search = area
 			return db.session.execute( db.select(getattr(cls, area)).where(getattr(cls, search) == user_detail)).scalar_one_or_none()
@@ -83,7 +83,13 @@ class Users(db.Model):
 	@classmethod
 	def fetch_user_row(cls, detail):
 		return db.session.execute(db.select(cls).where(or_(cls.username == detail, cls.email == detail))).scalar_one_or_none()
-			
+	
+	
+	@classmethod		
+	def toggle_has_profile_picture(cls, user_id):
+		user = db.session.get(cls, user_id)
+		user.has_profile_picture = False if user.has_profile_picture else True
+		db.session.commit()
 
 #class for table to store all uploads made by users
 																

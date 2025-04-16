@@ -52,6 +52,7 @@ input{
     border-radius: 2rem;
     box-shadow: 0 0 30px lightsteelblue;
     gap: 2em;
+    overflow-y: auto;
 }
 
 .field {

@@ -55,7 +55,7 @@
                             {{ form.otp(placeholder="000000")}}
                         </div>
                     </div>
-                    <p style="display: inline">Didn't receive an otp,<form action="" method="post" style="display: inline">{{ request.hidden_tag() }} {{ request.request(class="submit") }}</form> for a new one</p>
+                    <p style="display: inline;">Didn't receive an otp,</p><form action="" method="post">{{ request.hidden_tag() }} {{ request.request(class="submit") }}</form>
                 {% endif %}
                 <div class="submit">
                     {{ form.submit }}

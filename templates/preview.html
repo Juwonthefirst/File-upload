@@ -21,11 +21,11 @@
 
 <body>
     {% if type == "video" %}
-    <video src="{{ url }}" preload="none" autoplay="autoplay"></video>
+    <video src="{{ url }}" preload="auto" autoplay="autoplay"  controls></video>
     {% elif type == "image" %}
     <img src="{{ url }}"/>
     {% elif type == "audio" %}
-    <audio src="{{ url}}"></audio>
+    <audio src="{{ url }}"></audio>
     {% endif %}
 </body>
 

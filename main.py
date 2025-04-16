@@ -179,7 +179,7 @@ def signup3():
 def home():
 	user_id = session.get("id")
 	
-	if R2.has(f"profile_pictures/{user_id}"):
+	if Users.fetch("has_profile_picture", user_id, search = "id"):
 		profile_picture = R2.preview(f"profile_pictures/{user_id}", expiration = 30)
 	else:
 		profile_picture= url_for("static", filename = "image/logo.webp")
@@ -199,7 +199,7 @@ def home():
 def cloud(folder):
 	user_id = session.get("id")
 	
-	if R2.has(f"profile_pictures/{user_id}"):
+	if Users.fetch("has_profile_picture", user_id, search = "id"):
 		profile_picture = R2.preview(f"profile_pictures/{user_id}", expiration = 30)
 	else:
 		profile_picture= url_for("static", filename = "image/logo.webp")
@@ -248,6 +248,7 @@ def delete(folder, filename):
 		try:
 			if R2.delete(file_location):
 				file_row.delete()
+				session["total_file_size"] -= file_row.filesize
 				flash(f"{filename} removed from your cloud", "success")
 				return redirect(url_for("cloud", folder = folder))
 				
@@ -536,7 +537,7 @@ def upload():
 						flash("Cloud upload successful", "success")
 					else:
 						flash("Unable to connect to the cloud", "error")
-						#file_data.delete()
+						file_data.delete()
 				else:
 					flash("File already exists", "error")
 					upload.filename.errors.append("Change File name ")
@@ -593,14 +594,17 @@ def profile():
 	if email.validate_on_submit():
 		new_email = email.email.data.strip().capitalize()
 		if new_email != user_detail.email:
-			session["email"] = new_email
-			return redirect(url_for("request_email_change"))
+			email_exist = Users.fetch("email", new_email)
+			if not email_exist:
+				session["email"] = new_email
+				return redirect(url_for("request_email_change"))
+			flash("Email already in use", "error")
 		
 	firstname.firstname.data = user_detail.firstname
 	lastname.lastname.data = user_detail.lastname
 	email.email.data = user_detail.email
 	
-	if R2.has(f"profile_pictures/{user_id}"):
+	if user_detail.has_profile_picture:
 		profile_picture = R2.preview(f"profile_pictures/{user_id}", expiration = 30)
 	else:
 		profile_picture= url_for("static", filename = "image/logo.webp")

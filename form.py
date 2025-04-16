@@ -26,7 +26,7 @@ class SignupPage1(FlaskForm):
 	
 #class for signup from page 2	
 class SignupPage2(FlaskForm):
-	otp = IntegerField("OTP Code", validators = [InputRequired(), validate_length])
+	otp = IntegerField("OTP Code", validators = [ validate_length])
 	submit = SubmitField("Verify")
 	
 #class for signup from page 3
@@ -75,13 +75,13 @@ class RequestChangePass(FlaskForm):
 	
 #class for form to change password
 class ChangePass(FlaskForm):
-	otp = IntegerField("OTP Code", validators = [InputRequired(), validate_length])	
+	otp = IntegerField("OTP Code", validators = [validate_length])	
 	password = PasswordField("New Password", validators = [DataRequired(), Length(min = 8)])
 	c_password = PasswordField("Confirm New Password", validators = [DataRequired(), Length(min = 8), EqualTo("password")])
 	submit = SubmitField("Change password")
 	
 class RequestOTP(FlaskForm):
-	request = SubmitField("Request")
+	request = SubmitField("Request for a new one")
 	
 class VerifyPassword(FlaskForm):
 	password = PasswordField("Password", validators = [DataRequired(), Length(min = 8)])

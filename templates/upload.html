@@ -32,8 +32,10 @@
                 {% endif %}
             {% endwith %}
         <form action="" method="post" enctype="multipart/form-data">
+        <div class="upload-field">
             {{ upload.hidden_tag() }}
-            {{ upload.file }}
+            {{ upload.file(class="upload-area") }}
+        </div>
             {% if not upload.file.errors%}
             <p class="extra"> *Accepted files include jpeg ,  png ,  gif ,  webp ,  pdf ,  docx ,  xlsx ,  pptx ,  txt ,  mp4 ,  mov ,  avi ,  mkv ,  mp3 ,  wav ,  ogg ,  zip ,  rar ,  7z ,  tar.gz ,  csv ,  json</p>
             {% endif %}
