@@ -29,7 +29,7 @@ from helper_functions import (
 													)
 from R2_manager import R2Manager as R2
 from io import BytesIO
-import jwt, secrets
+import jwt, secrets, os
 
 # flask configuration settings
 app=Flask(__name__)
@@ -39,9 +39,15 @@ app.permanent_session_lifetime = timedelta(days=30)
 #initializing other modules
 db.init_app(app)
 init_table(app)
+load_dotenv(".env")
 ph = PasswordHasher()
 jwt_key = app.config.get("SECRET_KEY")
-cache = Redis(host = "localhost", port = 6379, db = 0)
+cache = Redis(
+							host = os.getenv("REDIS_HOST"), 
+							password = os.getenv("REDIS_PASS"),
+							port = 6379,
+							ssl = True
+							)
 
 # routing function
 
