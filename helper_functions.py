@@ -3,8 +3,9 @@ from functools import wraps
 from flask import session, request, redirect, url_for, flash
 from flask_mail import Mail, Message
 from datetime import datetime, timedelta, timezone
-import random, gzip, json, base64
-
+import random
+from dotenv import load_dotenv
+load_dotenv(".env")
 #validating env
 def validate_env(variables):
 	for var in variables:
@@ -65,7 +66,7 @@ def validate_mime(file):
 	"application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
 	"application/vnd.openxmlformats-officedocument.presentationml.presentation",
 	"text/plain", "video/mp4", "video/quicktime", "video/x-msvideo",
-	"video/x-matroska", "audio/mpeg", "audio/wav", "audio/ogg",
+	"video/x-matroska", "audio/mpeg", "audio/wav","audio/wave", "audio/ogg",
 	"application/zip", "application/vnd.rar", "application/x-7z-compressed",
 	"application/gzip", "text/csv", "application/json"
 ]
@@ -158,7 +159,7 @@ def add_extension(filename, mime_type):
 	"application/vnd.openxmlformats-officedocument.spreadsheetml.sheet": ".xlsx",
 	"application/vnd.openxmlformats-officedocument.presentationml.presentation": ".pptx",
 	"text/plain": ".txt", "video/mp4": ".mp4", "video/quicktime": ".mov", "video/x-msvideo": ".avi",
-		"video/x-matroska": ".mkv", "audio/mpeg": ".mp3", "audio/wav": ".wav","audio/ogg":  ".ogg",
+		"video/x-matroska": ".mkv", "audio/mpeg": ".mp3", "audio/wav": ".wav", "audio/wave": ".wav", "audio/ogg":  ".ogg",
 	 "application/zip": ".zip", "application/vnd.rar": ".rar", "application/x-7z-compressed": ".7z",
 	"application/gzip": ".tar.gz", "text/csv": ".csv", "application/json": ".json"
 }

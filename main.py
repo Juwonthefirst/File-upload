@@ -74,9 +74,9 @@ def login():
 												})
 						return redirect( next_page or url_for("home"))
 				except VerifyMismatchError:
-					flash("Incorrect username and password combination", "error")
+					flash("Incorrect Username and Password combination", "error")
 			else:
-				flash("Incorrect username and password combination", "error")
+				flash("Incorrect Username and Password combination", "error")
 	except Exception as err:
 		Errors(error = str(err)).log()			
 	return render_template("login.html", form=form)
