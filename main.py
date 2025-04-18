@@ -31,7 +31,7 @@ from io import BytesIO
 import secrets, os
 
 # flask configuration settings
-app=Flask(__name__)
+app = Flask(__name__)
 app.config.from_pyfile("config.py")
 app.permanent_session_lifetime = timedelta(days=30)
 
@@ -75,7 +75,7 @@ def login():
 			else:
 				flash("Incorrect Username and Password combination", "error")
 	except Exception as err:
-		Errors(error = str(err)).log()			
+		response = Errors(error = str(err)).log()
 	return render_template("login.html", form=form)
 
 
