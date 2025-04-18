@@ -228,7 +228,10 @@ def cloud(folder):
 @login_required
 def download(folder, filename):
 	user_id = session.get("id")
-	file_row = Uploads.fetch_filerow(user_id, folder, filename)	
+	file_row = Uploads.fetch_filerow(user_id, folder, filename)
+	if not file_row:
+		flash("File doesn't exist")
+		return redirect(url_for('cloud', folder = folder))
 	file_location = file_row.filelocation
 	try:
 		response = R2.get_file(file_location)
@@ -254,7 +257,10 @@ def delete(folder, filename):
 	user_id = session.get("id")
 	form = ConfirmDelete()
 	if form.validate_on_submit():
-		file_row = Uploads.fetch_filerow(user_id, folder, filename)	
+		file_row = Uploads.fetch_filerow(user_id, folder, filename)
+		if not file_row:
+			flash("File doesn't exist")
+			return redirect(url_for('cloud', folder = folder))
 		file_location = file_row.filelocation
 		try:
 			if R2.delete(file_location):
@@ -285,6 +291,9 @@ def preview(folder, filename):
 		allowed_mime = ["image", "video", "audio"]
 		user_id = session.get("id")
 		file_row = Uploads.fetch_filerow(user_id, folder, filename)
+		if not file_row:
+			flash("File doesn't exist")
+			return redirect(url_for('cloud', folder = folder))
 		file_type = file_row.content_type
 		file_location = file_row.filelocation
 		for mime in allowed_mime:
