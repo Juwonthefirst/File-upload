@@ -426,7 +426,7 @@ def request_password_change():
 		if user_info:
 			response = send_mail(app, user_info.email)
 			if response == "Email sent":
-				session["recovery id"] = user_info.id
+				session["recovery_id"] = user_info.id
 				session["email"] = user_info.email
 				return redirect(url_for("change_password"))
 		else:
@@ -436,7 +436,7 @@ def request_password_change():
 
 @app.route("/password/change/", methods = ["GET", "POST"])
 def change_password():
-	user_id = session.get("recovery id")
+	user_id = session.get("recovery_id")
 	form = ChangePass()
 	request = RequestOTP()
 	if "otp" not in session:
