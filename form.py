@@ -45,7 +45,7 @@ class FileUpload(FlaskForm):
 	
 #class for form for sharing files
 class FileShare(FlaskForm):
-	receiver = StringField("Who can use your link", validators =[Regexp(r"^[\w -,]+$", message = "Invalid Username format")])
+	receiver = StringField("Who can use your link", validators =[DataRequired(), Regexp(r"^[\w -,]+$", message = "Invalid Username format")])
 	submit = SubmitField("Share")
 
 #class for form to download shared file	
@@ -64,7 +64,7 @@ class ChangeLastname(FlaskForm):
 	
 #class for form to change email 
 class ChangeEmail(FlaskForm):
-	email = StringField("Email", validators = [DataRequired(),Email()])
+	email = StringField("Email", validators = [DataRequired(), Email()])
 	submit = SubmitField("Change Email")
 
 #class for form to request password change
