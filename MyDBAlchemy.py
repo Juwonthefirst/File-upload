@@ -189,7 +189,7 @@ class Errors(db.Model):
 	def log(self):
 		db.session.add(self)
 		db.session.commit()
-		return "Error logged"
+		return f"{self.error} for user {self.user_id} during {self.time} logged"
  		
  		
  #function to create table if they don't exist 				
