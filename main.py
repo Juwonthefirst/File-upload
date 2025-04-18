@@ -39,7 +39,7 @@ app.permanent_session_lifetime = timedelta(days=30)
 db.init_app(app)
 init_table(app)
 ph = PasswordHasher()
-logging.basicConfig(level = logging.INFO, format = "%(asctime)s - %(levelname)s - %(message)s")
+logging.basicConfig(level = logging.ERROR, format = "%(asctime)s - %(levelname)s - %(message)s")
 cache = Redis(
 							host = os.getenv("REDIS_HOST"), 
 							password = os.getenv("REDIS_PASS"),
@@ -77,6 +77,7 @@ def login():
 				flash("Incorrect Username and Password combination", "error")
 	except Exception as err:
 		response = Errors(error = str(err)).log()
+		logging.error(response)
 	return render_template("login.html", form=form)
 
 
@@ -100,7 +101,8 @@ def signup1():
 			response = send_mail(app, email)
 			if response == "Email sent":
 				return redirect(url_for("signup2"))
-			Errors(error = str(response)).log()
+			response = Errors(error = str(response)).log()
+			logging.error(response)
 		else:
 			form.email.errors.append("Email already in use")
 	return render_template("signup(page_1).html",  form=form)
@@ -128,11 +130,13 @@ def signup2():
 				flash("Invalid OTP, check and try again", "error")
 			case _:
 				flash("Something went wrong, try again later", "error")
-				Errors(error = str(response)).log()
+				response = Errors(error = str(response)).log()
+				logging.error(response)
 	elif request.validate_on_submit():
 		response = resend_mail(app)
 		if response != "Email sent":
-			Errors(error = str(response)).log
+			response = Errors(error = str(response)).log()
+			logging.error(response)
 		
 	return render_template("signup(page_2).html",  form=form, request = request, title = "Stratovault - verify OTP")
 
@@ -170,7 +174,8 @@ def signup3():
 													})
 					return redirect(next_page or url_for("home"))
 			except Exception as err:
-				Errors(error = str(err)).log()
+				response = Errors(error = str(err)).log()
+				logging.error(response)
 				flash("Something went wrong, please try again", "error")
 		else:
 			form.username.errors.append("Username already in use")
@@ -227,7 +232,8 @@ def download(folder, filename):
 	try:
 		response = R2.get_file(file_location)
 	except Exception as err:
-		Errors(error = str(err), user_id = session.get("id")).log()
+		response = Errors(error = str(err), user_id = session.get("id")).log()
+		logging.error(response)
 		flash("Something went wrong, please try again later", "error")
 		return redirect(url_for("cloud", folder = folder))
 		
@@ -261,7 +267,8 @@ def delete(folder, filename):
 				return redirect(url_for("cloud", folder = folder))
 					
 		except Exception as err:
-			Errors(error = str(err), user_id = user_id).log()
+			response = Errors(error = str(err), user_id = user_id).log()
+			logging.error(response)
 			
 		flash("Unable to connect to your cloud", "error")
 		return redirect(url_for("cloud", folder = folder))
@@ -288,7 +295,8 @@ def preview(folder, filename):
 					return redirect(url_for("cloud", folder = folder))
 		flash("Can only preview Images, Videos or Audio", "error")
 	except Exception as err:
-		Errors(error = str(err), user_id = user_id).log()
+		response = Errors(error = str(err), user_id = user_id).log()
+		logging.error(response)
 		flash("Something went wrong, Please try again later", "error")
 	
 	return redirect(url_for("cloud", folder = folder))	
@@ -348,7 +356,7 @@ def shared(token):
 			file_name = cache.hget(token, "filename").decode()
 			response = R2.get_file(file_location)
 		except Exception as err:
-			Errors(error = str(err), user_id = session.get("id")).log()
+			logging.error(Errors(error = str(err), user_id = session.get("id")).log())
 			response = None
 			flash("Something went wrong, please try again later", "error")
 			
@@ -404,8 +412,8 @@ def shared(token):
 	except exceptions.ConnectionError:
 			flash("Unable to retrieve data at the moment", "error")
 	except Exception as err:
-		Errors(error = str(err), user_id = user_id).log()
-												
+		response = Errors(error = str(err), user_id = user_id).log()
+		logging.error(response)										
 	return render_template("Shared.html", error = "Access Denied")
 
 
@@ -450,12 +458,13 @@ def change_password():
 				flash("Invalid OTP, check and try again later", "error")
 			case _:
 				flash("Something went wrong, try again later", "error")
-				Errors(error = str(response)).log()
+				response = Errors(error = str(response)).log()
+				logging.error(response)
 	elif request.validate_on_submit():
 		response = resend_mail(app)
 		if response != "Email sent":
-			Errors(error = str(response)).log
-				
+			response = Errors(error = str(response)).log()
+			logging.error(response)	
 	return render_template("change_password.html", form = form, request = request)
 
 
@@ -472,7 +481,9 @@ def request_email_change():
 				response = send_mail(app, session.get("email"))
 				if response == "Email sent":
 					return redirect(url_for("email_change")) 
-				Errors(error = str(response), user_id = user_id).log()
+				response = Errors(error = str(response), user_id = user_id).log()
+				logging.error(response)
+				
 		except VerifyMismatchError:
 			form.password.errors.append("Incorrect Password")
 	return render_template("email_change_request.html", form = form)
@@ -499,12 +510,14 @@ def email_change():
 				flash("Invalid OTP, check and try again later", "error")
 			case _:
 				flash("Something went wrong, try again later", "error")
-				Errors(error = str(response)).log()
+				response = Errors(error = str(response)).log()
+				logging.error(response)
 	elif request.validate_on_submit():
 		response = resend_mail(app)
 		if response != "Email sent":
-			Errors(error = str(response)).log
-		
+			Errors(error = str(response)).log()
+			logging.error(response)
+			
 	return render_template("signup(page_2).html",  form=form, request = request, title = "Stratovault - Email Change")
 		
 @app.route("/upload/", methods = ["GET", "POST"])
@@ -546,7 +559,8 @@ def upload():
 					flash("File already exists", "error")
 					upload.filename.errors.append("Change File name ")
 			except Exception as err:
-					Errors(error = str(err), user_id = user_id).log()
+					response = Errors(error = str(err), user_id = user_id).log()
+					logging.error(response)
 					flash("Something went wrong, please try again later", "error")
 			
 		else:
@@ -582,7 +596,8 @@ def profile():
 				response = Users.update_firstname(user_id, new_name)
 				flash(response, "success")
 			except Exception as err:
-				Errors(error = str(err), user_id = user_id).log()
+				response = Errors(error = str(err), user_id = user_id).log()
+				logging.error(response)
 				flash("Something went wrong, please try again later", "error")
 				
 	if lastname.validate_on_submit():
@@ -592,7 +607,8 @@ def profile():
 				response = Users.update_lastname(user_id, new_name)
 				flash(response, "success")
 			except Exception as err:
-				Errors(error = str(err), user_id = user_id).log()
+				response = Errors(error = str(err), user_id = user_id).log()
+				logging.error(response)
 				flash("Something went wrong, please try again later", "error")
 
 	if email.validate_on_submit():
