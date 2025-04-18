@@ -20,7 +20,7 @@ class LoginForm(FlaskForm):
 class SignupPage1(FlaskForm):
 	first_name = StringField("First Name", validators = [DataRequired(), Length(min = 2, max = 60)])
 	last_name = StringField("Last Name", validators = [DataRequired(), Length(min = 2, max = 60)])
-	email = StringField("Email", validators = [DataRequired(),Email()])
+	email = StringField("Email", validators = [DataRequired(), Email()])
 	signup = SubmitField("Continue")
 
 	
