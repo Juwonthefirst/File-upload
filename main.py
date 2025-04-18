@@ -28,6 +28,7 @@ from helper_functions import (
 													)
 from R2_manager import R2Manager as R2
 from io import BytesIO
+from werkzeug.utils import secure_filename
 import secrets, os, logging
 
 # flask configuration settings
@@ -278,7 +279,8 @@ def delete(folder, filename):
 	
 @app.get("/cloud/<string:folder>/<string:filename>/preview/")
 @login_required
-def preview(folder, filename):	
+def preview(folder, filename):
+	user_id = session.get("id")
 	try:
 		allowed_mime = ["image", "video", "audio"]
 		user_id = session.get("id")
@@ -529,7 +531,7 @@ def upload():
 		file = upload.file.data
 		mime_type = validate_mime(file)
 		if mime_type:
-			folder = request.form.get("folder").strip().replace("/", "-")
+			folder = secure_filename(request.form.get("folder"))
 			file_name = add_extension(upload.filename.data.strip(), file.mimetype)
 			if not file_name:
 				file_name = file.filename
