@@ -390,7 +390,7 @@ def shared(token):
 		sender_name = cache.hget(token, "sender_name").decode()
 		url = cache.hget(token, "url").decode()
 		return render_template(
-													"Shared.html",
+													"shared.html",
 													filename = file_name, 
 													filesize = cache.hget(token, "filesize").decode(), 
 													filetype = cache.hget(token, "filetype").decode(), 
@@ -401,7 +401,7 @@ def shared(token):
 									
 	try:
 		if not cache.exists(token):
-			return render_template("Shared.html", error = "Invalid Link")
+			return render_template("shared.html", error = "Invalid Link")
 			#return render_template("Shared.html", error = "Expired Link")
 				
 		receivers_list = cache.hget(token, "receivers").decode()
@@ -414,7 +414,7 @@ def shared(token):
 			url = cache.hget(token, "url").decode()
 			
 			return render_template(
-														"Shared.html",
+														"shared.html",
 														filename = file_name, 
 														filesize = file_size, 
 														filetype = file_type, 
@@ -428,7 +428,7 @@ def shared(token):
 	except Exception as err:
 		response = Errors(error = str(err), user_id = user_id).log()
 		logging.error(response)										
-	return render_template("Shared.html", error = "Access Denied")
+	return render_template("shared.html", error = "Access Denied")
 
 
 @app.route("/password/change/request/", methods = ["GET", "POST"])
