@@ -215,6 +215,9 @@ def cloud(folder):
 		profile_picture= url_for("static", filename = "image/logo.webp")
 		
 	files = Uploads.fetch_filename(user_id, folder, all = True)
+	if not files: 
+		flash("Folder doesn't exist")
+		return redirect(url_for("cloud"))
 	return render_template(
 												"home.html", 
 												files=list(dict.fromkeys(files)), 
@@ -230,7 +233,7 @@ def download(folder, filename):
 	user_id = session.get("id")
 	file_row = Uploads.fetch_filerow(user_id, folder, filename)
 	if not file_row:
-		flash("File doesn't exist")
+		flash("File not found", "error")
 		return redirect(url_for('cloud', folder = folder))
 	file_location = file_row.filelocation
 	try:
@@ -259,7 +262,7 @@ def delete(folder, filename):
 	if form.validate_on_submit():
 		file_row = Uploads.fetch_filerow(user_id, folder, filename)
 		if not file_row:
-			flash("File doesn't exist")
+			flash("File not found", "error")
 			return redirect(url_for('cloud', folder = folder))
 		file_location = file_row.filelocation
 		try:
@@ -292,7 +295,7 @@ def preview(folder, filename):
 		user_id = session.get("id")
 		file_row = Uploads.fetch_filerow(user_id, folder, filename)
 		if not file_row:
-			flash("File doesn't exist")
+			flash("File not found", "error")
 			return redirect(url_for('cloud', folder = folder))
 		file_type = file_row.content_type
 		file_location = file_row.filelocation
