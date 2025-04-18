@@ -7,7 +7,7 @@
 }
 .body{
     height: 100vh;
-    max-height: 720px;
+
     background-color: floralwhite;
     overflow: hidden;
 }
@@ -16,16 +16,36 @@
 	display: inline-block;
     width: 70vw;
     height: 30vh;
-    border: 2px solid cadetblue;
+	border: 3px dashed cadetblue;
     background-color: powderblue;
-    border-radius: 10px;
+    border-radius: 20px;
     justify-self: center;
     align-self: center;
 }
 .upload-area{
+	position: absolute;
+	left: 14%;
+	z-index: 2;
 	opacity: 0;
 }
+.upload-field{
+	background-color: rgba(255, 255, 255, .2);
+	display: flex;
+	justify-content: center;
+	align-items: center;
+}
 
+
+.upload-field > .field-info{
+	position: relative;
+	z-index: 1;
+	font-size: 12px;
+	text-align: center;
+}
+
+.upload-field > .field-info > iconify-icon{
+	font-size: 60px;
+}
 
 .input{
     width: 50vw;
