@@ -28,7 +28,7 @@ from helper_functions import (
 													)
 from R2_manager import R2Manager as R2
 from io import BytesIO
-import secrets, os
+import secrets, os, logging
 
 # flask configuration settings
 app = Flask(__name__)
@@ -39,6 +39,7 @@ app.permanent_session_lifetime = timedelta(days=30)
 db.init_app(app)
 init_table(app)
 ph = PasswordHasher()
+logging.basicConfig(level = logging.INFO, format = "%(asctime)s - %(levelname)s - %(message)s")
 cache = Redis(
 							host = os.getenv("REDIS_HOST"), 
 							password = os.getenv("REDIS_PASS"),
