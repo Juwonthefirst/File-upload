@@ -217,7 +217,7 @@ def cloud(folder):
 	files = Uploads.fetch_filename(user_id, folder, all = True)
 	if not files: 
 		flash("Folder doesn't exist")
-		return redirect(url_for("cloud"))
+		return redirect(url_for("home"))
 	return render_template(
 												"home.html", 
 												files=list(dict.fromkeys(files)), 
