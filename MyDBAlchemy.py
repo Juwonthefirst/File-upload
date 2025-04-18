@@ -184,12 +184,12 @@ class Errors(db.Model):
 	
 	
 	def __repr__(self):
-		return f"{error} for user {user_id} during {time}"
+		return f"{self.error} for user {self.user_id} during {self.time}"
 	
 	def log(self):
 		db.session.add(self)
 		db.session.commit()
-		return "Error logged"
+		return f"{self.error} for user {self.user_id} during {self.time} logged"
  		
  		
  #function to create table if they don't exist 				

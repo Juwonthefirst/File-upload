@@ -12,7 +12,6 @@ class LoginForm(FlaskForm):
 	
 	username = StringField("Username", validators = [DataRequired()])
 	password = PasswordField("Password", validators = [DataRequired()])
-	remember = BooleanField("Remember me")
 	login = SubmitField("Login")
 	
 
@@ -20,7 +19,7 @@ class LoginForm(FlaskForm):
 class SignupPage1(FlaskForm):
 	first_name = StringField("First Name", validators = [DataRequired(), Length(min = 2, max = 60)])
 	last_name = StringField("Last Name", validators = [DataRequired(), Length(min = 2, max = 60)])
-	email = StringField("Email", validators = [DataRequired(),Email()])
+	email = StringField("Email", validators = [DataRequired(), Email()])
 	signup = SubmitField("Continue")
 
 	
@@ -46,7 +45,7 @@ class FileUpload(FlaskForm):
 	
 #class for form for sharing files
 class FileShare(FlaskForm):
-	receiver = StringField("Who can use your link", validators =[Regexp(r"^[\w -,]+$", message = "Invalid Username format")])
+	receiver = StringField("Who can use your link", validators =[DataRequired(), Regexp(r"^[\w -,]+$", message = "Invalid Username format")])
 	submit = SubmitField("Share")
 
 #class for form to download shared file	
@@ -65,7 +64,7 @@ class ChangeLastname(FlaskForm):
 	
 #class for form to change email 
 class ChangeEmail(FlaskForm):
-	email = StringField("Email", validators = [DataRequired(),Email()])
+	email = StringField("Email", validators = [DataRequired(), Email()])
 	submit = SubmitField("Change Email")
 
 #class for form to request password change

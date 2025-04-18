@@ -28,10 +28,11 @@ from helper_functions import (
 													)
 from R2_manager import R2Manager as R2
 from io import BytesIO
-import secrets, os
+from werkzeug.utils import secure_filename
+import secrets, os, logging
 
 # flask configuration settings
-app=Flask(__name__)
+app = Flask(__name__)
 app.config.from_pyfile("config.py")
 app.permanent_session_lifetime = timedelta(days=30)
 
@@ -39,6 +40,7 @@ app.permanent_session_lifetime = timedelta(days=30)
 db.init_app(app)
 init_table(app)
 ph = PasswordHasher()
+logging.basicConfig(level = logging.ERROR, format = "%(asctime)s - %(levelname)s - %(message)s")
 cache = Redis(
 							host = os.getenv("REDIS_HOST"), 
 							password = os.getenv("REDIS_PASS"),
@@ -75,7 +77,8 @@ def login():
 			else:
 				flash("Incorrect Username and Password combination", "error")
 	except Exception as err:
-		Errors(error = str(err)).log()			
+		response = Errors(error = str(err)).log()
+		logging.error(response)
 	return render_template("login.html", form=form)
 
 
@@ -99,7 +102,8 @@ def signup1():
 			response = send_mail(app, email)
 			if response == "Email sent":
 				return redirect(url_for("signup2"))
-			Errors(error = str(response)).log()
+			response = Errors(error = str(response)).log()
+			logging.error(response)
 		else:
 			form.email.errors.append("Email already in use")
 	return render_template("signup(page_1).html",  form=form)
@@ -127,11 +131,13 @@ def signup2():
 				flash("Invalid OTP, check and try again", "error")
 			case _:
 				flash("Something went wrong, try again later", "error")
-				Errors(error = str(response)).log()
+				response = Errors(error = str(response)).log()
+				logging.error(response)
 	elif request.validate_on_submit():
 		response = resend_mail(app)
 		if response != "Email sent":
-			Errors(error = str(response)).log
+			response = Errors(error = str(response)).log()
+			logging.error(response)
 		
 	return render_template("signup(page_2).html",  form=form, request = request, title = "Stratovault - verify OTP")
 
@@ -169,7 +175,8 @@ def signup3():
 													})
 					return redirect(next_page or url_for("home"))
 			except Exception as err:
-				Errors(error = str(err)).log()
+				response = Errors(error = str(err)).log()
+				logging.error(response)
 				flash("Something went wrong, please try again", "error")
 		else:
 			form.username.errors.append("Username already in use")
@@ -208,6 +215,9 @@ def cloud(folder):
 		profile_picture= url_for("static", filename = "image/logo.webp")
 		
 	files = Uploads.fetch_filename(user_id, folder, all = True)
+	if not files: 
+		flash("Folder doesn't exist")
+		return redirect(url_for("home"))
 	return render_template(
 												"home.html", 
 												files=list(dict.fromkeys(files)), 
@@ -221,12 +231,16 @@ def cloud(folder):
 @login_required
 def download(folder, filename):
 	user_id = session.get("id")
-	file_row = Uploads.fetch_filerow(user_id, folder, filename)	
+	file_row = Uploads.fetch_filerow(user_id, folder, filename)
+	if not file_row:
+		flash("File not found", "error")
+		return redirect(url_for('cloud', folder = folder))
 	file_location = file_row.filelocation
 	try:
 		response = R2.get_file(file_location)
 	except Exception as err:
-		Errors(error = str(err), user_id = session.get("id")).log()
+		response = Errors(error = str(err), user_id = session.get("id")).log()
+		logging.error(response)
 		flash("Something went wrong, please try again later", "error")
 		return redirect(url_for("cloud", folder = folder))
 		
@@ -246,7 +260,10 @@ def delete(folder, filename):
 	user_id = session.get("id")
 	form = ConfirmDelete()
 	if form.validate_on_submit():
-		file_row = Uploads.fetch_filerow(user_id, folder, filename)	
+		file_row = Uploads.fetch_filerow(user_id, folder, filename)
+		if not file_row:
+			flash("File not found", "error")
+			return redirect(url_for('cloud', folder = folder))
 		file_location = file_row.filelocation
 		try:
 			if R2.delete(file_location):
@@ -260,7 +277,8 @@ def delete(folder, filename):
 				return redirect(url_for("cloud", folder = folder))
 					
 		except Exception as err:
-			Errors(error = str(err), user_id = user_id).log()
+			response = Errors(error = str(err), user_id = user_id).log()
+			logging.error(response)
 			
 		flash("Unable to connect to your cloud", "error")
 		return redirect(url_for("cloud", folder = folder))
@@ -270,11 +288,15 @@ def delete(folder, filename):
 	
 @app.get("/cloud/<string:folder>/<string:filename>/preview/")
 @login_required
-def preview(folder, filename):	
+def preview(folder, filename):
+	user_id = session.get("id")
 	try:
 		allowed_mime = ["image", "video", "audio"]
 		user_id = session.get("id")
 		file_row = Uploads.fetch_filerow(user_id, folder, filename)
+		if not file_row:
+			flash("File not found", "error")
+			return redirect(url_for('cloud', folder = folder))
 		file_type = file_row.content_type
 		file_location = file_row.filelocation
 		for mime in allowed_mime:
@@ -287,7 +309,8 @@ def preview(folder, filename):
 					return redirect(url_for("cloud", folder = folder))
 		flash("Can only preview Images, Videos or Audio", "error")
 	except Exception as err:
-		Errors(error = str(err), user_id = user_id).log()
+		response = Errors(error = str(err), user_id = user_id).log()
+		logging.error(response)
 		flash("Something went wrong, Please try again later", "error")
 	
 	return redirect(url_for("cloud", folder = folder))	
@@ -347,7 +370,7 @@ def shared(token):
 			file_name = cache.hget(token, "filename").decode()
 			response = R2.get_file(file_location)
 		except Exception as err:
-			Errors(error = str(err), user_id = session.get("id")).log()
+			logging.error(Errors(error = str(err), user_id = session.get("id")).log())
 			response = None
 			flash("Something went wrong, please try again later", "error")
 			
@@ -403,8 +426,8 @@ def shared(token):
 	except exceptions.ConnectionError:
 			flash("Unable to retrieve data at the moment", "error")
 	except Exception as err:
-		Errors(error = str(err), user_id = user_id).log()
-												
+		response = Errors(error = str(err), user_id = user_id).log()
+		logging.error(response)										
 	return render_template("Shared.html", error = "Access Denied")
 
 
@@ -417,7 +440,7 @@ def request_password_change():
 		if user_info:
 			response = send_mail(app, user_info.email)
 			if response == "Email sent":
-				session["recovery id"] = user_info.id
+				session["recovery_id"] = user_info.id
 				session["email"] = user_info.email
 				return redirect(url_for("change_password"))
 		else:
@@ -427,7 +450,7 @@ def request_password_change():
 
 @app.route("/password/change/", methods = ["GET", "POST"])
 def change_password():
-	user_id = session.get("recovery id")
+	user_id = session.get("recovery_id")
 	form = ChangePass()
 	request = RequestOTP()
 	if "otp" not in session:
@@ -449,12 +472,13 @@ def change_password():
 				flash("Invalid OTP, check and try again later", "error")
 			case _:
 				flash("Something went wrong, try again later", "error")
-				Errors(error = str(response)).log()
+				response = Errors(error = str(response)).log()
+				logging.error(response)
 	elif request.validate_on_submit():
 		response = resend_mail(app)
 		if response != "Email sent":
-			Errors(error = str(response)).log
-				
+			response = Errors(error = str(response)).log()
+			logging.error(response)	
 	return render_template("change_password.html", form = form, request = request)
 
 
@@ -471,7 +495,9 @@ def request_email_change():
 				response = send_mail(app, session.get("email"))
 				if response == "Email sent":
 					return redirect(url_for("email_change")) 
-				Errors(error = str(response), user_id = user_id).log()
+				response = Errors(error = str(response), user_id = user_id).log()
+				logging.error(response)
+				
 		except VerifyMismatchError:
 			form.password.errors.append("Incorrect Password")
 	return render_template("email_change_request.html", form = form)
@@ -498,12 +524,14 @@ def email_change():
 				flash("Invalid OTP, check and try again later", "error")
 			case _:
 				flash("Something went wrong, try again later", "error")
-				Errors(error = str(response)).log()
+				response = Errors(error = str(response)).log()
+				logging.error(response)
 	elif request.validate_on_submit():
 		response = resend_mail(app)
 		if response != "Email sent":
-			Errors(error = str(response)).log
-		
+			Errors(error = str(response)).log()
+			logging.error(response)
+			
 	return render_template("signup(page_2).html",  form=form, request = request, title = "Stratovault - Email Change")
 		
 @app.route("/upload/", methods = ["GET", "POST"])
@@ -515,7 +543,7 @@ def upload():
 		file = upload.file.data
 		mime_type = validate_mime(file)
 		if mime_type:
-			folder = request.form.get("folder").strip().replace("/", "-")
+			folder = secure_filename(request.form.get("folder"))
 			file_name = add_extension(upload.filename.data.strip(), file.mimetype)
 			if not file_name:
 				file_name = file.filename
@@ -545,7 +573,8 @@ def upload():
 					flash("File already exists", "error")
 					upload.filename.errors.append("Change File name ")
 			except Exception as err:
-					Errors(error = str(err), user_id = user_id).log()
+					response = Errors(error = str(err), user_id = user_id).log()
+					logging.error(response)
 					flash("Something went wrong, please try again later", "error")
 			
 		else:
@@ -581,7 +610,8 @@ def profile():
 				response = Users.update_firstname(user_id, new_name)
 				flash(response, "success")
 			except Exception as err:
-				Errors(error = str(err), user_id = user_id).log()
+				response = Errors(error = str(err), user_id = user_id).log()
+				logging.error(response)
 				flash("Something went wrong, please try again later", "error")
 				
 	if lastname.validate_on_submit():
@@ -591,7 +621,8 @@ def profile():
 				response = Users.update_lastname(user_id, new_name)
 				flash(response, "success")
 			except Exception as err:
-				Errors(error = str(err), user_id = user_id).log()
+				response = Errors(error = str(err), user_id = user_id).log()
+				logging.error(response)
 				flash("Something went wrong, please try again later", "error")
 
 	if email.validate_on_submit():
