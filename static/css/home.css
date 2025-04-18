@@ -37,7 +37,7 @@ iconify-icon{
 }
 .header{
     padding: 0.5rem;
-    color: #48A6A7;
+    color: powderblue;
     background: white;
     display: flex;
     align-items: center;
@@ -97,7 +97,7 @@ iconify-icon{
     z-index: 1;
     border-radius: 50%;
     background-color: whitesmoke;
-    color: #48A6A7;
+    color: powderblue;
     width: 19%;
     height: 10%;
     font-size: 45px;
