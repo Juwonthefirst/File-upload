@@ -4,8 +4,9 @@ from flask import session, request, redirect, url_for, flash
 from flask_mail import Mail, Message
 from datetime import datetime, timedelta, timezone
 import random
-from dotenv import load_dotenv
-load_dotenv(".env")
+
+
+
 #validating env
 def validate_env(variables):
 	for var in variables:

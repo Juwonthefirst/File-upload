@@ -14,7 +14,6 @@ from form import (
 									ChangePass, RequestOTP,
 									VerifyPassword, ConfirmDelete		
 									)
-from dotenv import load_dotenv
 from MyDBAlchemy import db, Users, Uploads, Errors, init_table
 from helper_functions import (
 														login_required,
@@ -39,7 +38,6 @@ app.permanent_session_lifetime = timedelta(days=30)
 #initializing other modules
 db.init_app(app)
 init_table(app)
-load_dotenv(".env")
 ph = PasswordHasher()
 jwt_key = app.config.get("SECRET_KEY")
 cache = Redis(
@@ -629,5 +627,3 @@ def profile():
 def logout():
 	session.clear()
 	return redirect(url_for("login"))
-		
-app.run(debug = True, host = "0.0.0.0", port = 5000)
