@@ -33,6 +33,10 @@
             {% endwith %}
         <form action="" method="post" enctype="multipart/form-data">
         <div class="upload-field">
+        	<div class="field-info">
+				<iconify-icon icon="mdi-light:cloud-upload"></iconify-icon>
+				<p>Tap to upload your file</p>
+        	</div>
             {{ upload.hidden_tag() }}
             {{ upload.file(class="upload-area") }}
         </div>
