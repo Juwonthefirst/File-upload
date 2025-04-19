@@ -1,5 +1,5 @@
 from flask import Flask, request, render_template, redirect, url_for, flash, session, send_file
-from redis import Redis, exceptions
+from redis import Redis, exceptions, ConnectionPool
 from datetime import timedelta, datetime, timezone
 from argon2 import PasswordHasher
 from argon2.exceptions import VerifyMismatchError
@@ -41,12 +41,14 @@ db.init_app(app)
 init_table(app)
 ph = PasswordHasher()
 logging.basicConfig(level = logging.ERROR, format = "%(asctime)s - %(levelname)s - %(message)s")
-cache = Redis(
+redis_pool = ConnectionPool(
 							host = os.getenv("REDIS_HOST"), 
 							password = os.getenv("REDIS_PASS"),
 							port = 6379,
-							ssl = True
+							ssl = True,
+							max_connections = 10
 							)
+cache = Redis(connection_pool = redis_pool)
 
 # routing function
 
