@@ -45,7 +45,7 @@ redis_pool = ConnectionPool(
 							host = os.getenv("REDIS_HOST"), 
 							password = os.getenv("REDIS_PASS"),
 							port = 6379,
-							ssl = True,
+							connection_class = redis.SSLConnection,
 							max_connections = 10
 							)
 cache = Redis(connection_pool = redis_pool)
