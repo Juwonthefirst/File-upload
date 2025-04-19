@@ -1,5 +1,5 @@
 from flask import Flask, request, render_template, redirect, url_for, flash, session, send_file
-from redis import Redis, exceptions, ConnectionPool
+from redis import Redis, exceptions, ConnectionPool, SSLConnection
 from datetime import timedelta, datetime, timezone
 from argon2 import PasswordHasher
 from argon2.exceptions import VerifyMismatchError
@@ -45,7 +45,7 @@ redis_pool = ConnectionPool(
 							host = os.getenv("REDIS_HOST"), 
 							password = os.getenv("REDIS_PASS"),
 							port = 6379,
-							connection_class = redis.SSLConnection,
+							connection_class = SSLConnection,
 							max_connections = 10
 							)
 cache = Redis(connection_pool = redis_pool)
