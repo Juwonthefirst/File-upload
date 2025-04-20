@@ -24,7 +24,8 @@ from helper_functions import (
 														not_logged_in, 
 														resend_mail,
 														stringify_byte,
-														add_extension
+														add_extension,
+														enable_cookies
 													)
 from R2_manager import R2Manager as R2
 from io import BytesIO
@@ -42,7 +43,7 @@ init_table(app)
 ph = PasswordHasher()
 logging.basicConfig(level = logging.ERROR, format = "%(asctime)s - %(levelname)s - %(message)s")
 redis_pool = ConnectionPool(
-							host = os.getenv("REDIS_HOST"), 
+							host = os.getenv("REDIS_HOST"),
 							password = os.getenv("REDIS_PASS"),
 							port = 6379,
 							connection_class = SSLConnection,
@@ -55,9 +56,10 @@ cache = Redis(connection_pool = redis_pool)
 @app.route("/login/", methods = ["GET", "POST"])
 @not_logged_in
 def login():
-	try:				
+	form = LoginForm()
+	try:
+		request.cookies.get("anonymous_user_id")			
 		next_page = session.get("next_page")
-		form = LoginForm()
 		if form.validate_on_submit():
 			detail = form.username.data.capitalize().strip()
 			password = form.password.data.strip()
@@ -99,11 +101,12 @@ def signup1():
 			session.update({
 											"first_name": first_name,
 											"last_name": last_name,
-											"email": email
+											"email": email											
 											})
 			response = send_mail(app, email)
 			if response == "Email sent":
 				return redirect(url_for("signup2"))
+			flash("Something went wrong, try again later", "error")
 			response = Errors(error = str(response)).log()
 			logging.error(response)
 		else:
@@ -118,7 +121,7 @@ def signup2():
 	if "email" not in session:
 		return redirect(url_for("signup1"))
 	
-	request = RequestOTP()
+	request_otp = RequestOTP()
 	form = SignupPage2()
 	if form.validate_on_submit():
 		otp = form.otp.data
@@ -127,28 +130,29 @@ def signup2():
 			case "verified":
 				session["email_verified"] = True
 				return redirect(url_for("signup3"))
-			case "expired":
-				flash("Expired OTP, request a new one", "error")
+			case "incorrect":
+				flash("Incorrect OTP, check and try again later", "error")
 			case "invalid":
-				flash("Invalid OTP, check and try again", "error")
+				flash("Invalid OTP, request a new one", "error")
 			case _:
 				flash("Something went wrong, try again later", "error")
-				response = Errors(error = str(response)).log()
-				logging.error(response)
-	elif request.validate_on_submit():
-		response = resend_mail(app)
+				status = Errors(error = str(response)).log()
+				logging.error(status)
+	elif request_otp.validate_on_submit():
+		response = resend_mail(app, session.get("email"))
 		if response != "Email sent":
 			response = Errors(error = str(response)).log()
 			logging.error(response)
 		
-	return render_template("signup(page_2).html",  form=form, request = request, title = "Stratovault - verify OTP")
+	return render_template("signup(page_2).html",  form = form, request = request_otp, title = "Stratovault - verify OTP")
 
 @app.route("/signup/finish/", methods = ["GET", "POST"])
 @not_logged_in
 def signup3():
 		
 	if "email_verified" not in session:
-		return redirect(url_for("signup2"))		
+		return redirect(url_for("signup2"))
+		
 	form = SignupPage3()
 	if form.validate_on_submit():
 		next_page = session.get("next_page")
@@ -173,7 +177,7 @@ def signup3():
 					session.update({
 													"id" : new_user.id,
 													"username" : username, 
-													"total_file_size": 0
+													"total_file_size": 0,
 													})
 					return redirect(next_page or url_for("home"))
 			except Exception as err:
@@ -194,8 +198,7 @@ def home():
 	if Users.fetch("has_profile_picture", user_id, search = "id"):
 		profile_picture = R2.preview(f"profile_pictures/{user_id}", expiration = 30)
 	else:
-		profile_picture= url_for("static", filename = "image/logo.webp")
-						
+		profile_picture= url_for("static", filename = "image/logo.webp")					
 							
 	folders = Uploads.fetch("folder", user_id, search = "user_id", all = True)
 	return render_template(
@@ -362,6 +365,7 @@ def share(folder, filename):
 
 
 @app.route("/shared/<token>/", methods = ["GET", "POST"])
+@enable_cookies
 def shared(token):
 	user_id = session.get("id")
 	username = session.get("username")
@@ -434,6 +438,7 @@ def shared(token):
 
 
 @app.route("/password/change/request/", methods = ["GET", "POST"])
+@enable_cookies
 def request_password_change():
 	form = RequestChangePass()
 	if form.validate_on_submit():
@@ -443,19 +448,22 @@ def request_password_change():
 			response = send_mail(app, user_info.email)
 			if response == "Email sent":
 				session["recovery_id"] = user_info.id
-				session["email"] = user_info.email
+				session["recovery_email"] = user_info.email
 				return redirect(url_for("change_password"))
+			status = Errors(error = str(response)).log()
+			logging.error(status)
 		else:
 			flash("User doesn't exist", "error")
 	return render_template("request_password_change.html", form = form)
 	
 
 @app.route("/password/change/", methods = ["GET", "POST"])
+@enable_cookies
 def change_password():
 	user_id = session.get("recovery_id")
 	form = ChangePass()
-	request = RequestOTP()
-	if "otp" not in session:
+	request_otp = RequestOTP()
+	if "recovery_email" not in session:
 		return redirect(url_for("request_password_change"))
 	if form.validate_on_submit():
 		otp = form.otp.data
@@ -468,20 +476,20 @@ def change_password():
 				session.clear()
 				flash("Password change successful", "success")
 				return redirect(url_for("login"))
-			case "expired":
-				flash("Expired OTP, request a new one", "error")
+			case "incorrect":
+				flash("Incorrect OTP, check and try again later", "error")
 			case "invalid":
-				flash("Invalid OTP, check and try again later", "error")
+				flash("Invalid OTP, request a new one", "error")
 			case _:
 				flash("Something went wrong, try again later", "error")
 				response = Errors(error = str(response)).log()
 				logging.error(response)
-	elif request.validate_on_submit():
-		response = resend_mail(app)
+	elif request_otp.validate_on_submit():
+		response = resend_mail(app, session.get("recovery_email"))
 		if response != "Email sent":
 			response = Errors(error = str(response)).log()
 			logging.error(response)	
-	return render_template("change_password.html", form = form, request = request)
+	return render_template("change_password.html", form = form, request = request_otp)
 
 
 @app.route("/email/change/request/", methods=["GET", "POST"])
@@ -494,7 +502,7 @@ def request_email_change():
 		password = form.password.data.strip()
 		try:
 			if ph.verify(user_details.password, password):
-				response = send_mail(app, session.get("email"))
+				response = send_mail(app, session.get("new_email"))
 				if response == "Email sent":
 					return redirect(url_for("email_change")) 
 				response = Errors(error = str(response), user_id = user_id).log()
@@ -508,33 +516,33 @@ def request_email_change():
 @login_required
 def email_change():
 	user_id = session.get("id")
-	request = RequestOTP()
+	request_otp = RequestOTP()
 	form = SignupPage2()
-	if "otp" not in session:
+	if "new_email" not in session:
 		return redirect(url_for("request_email_change"))
 	if form.validate_on_submit():
 		otp = form.otp.data
 		response = verify_otp(otp)
 		match (response):
 			case "verified":
-				Users.update_email(user_id, session.get("email"))
+				Users.update_email(user_id, session.get("new_email"))
 				session.pop("email", None)
 				return redirect(url_for("profile"))
-			case "expired":
-				flash("Expired OTP, request a new one", "error")
+			case "incorrect":
+				flash("Incorrect OTP, check and try again later", "error")
 			case "invalid":
-				flash("Invalid OTP, check and try again later", "error")
+				flash("Invalid OTP, request a new one", "error")
 			case _:
 				flash("Something went wrong, try again later", "error")
 				response = Errors(error = str(response)).log()
 				logging.error(response)
-	elif request.validate_on_submit():
-		response = resend_mail(app)
+	elif request_otp.validate_on_submit():
+		response = resend_mail(app, session.get("new_email"))
 		if response != "Email sent":
 			Errors(error = str(response)).log()
 			logging.error(response)
 			
-	return render_template("signup(page_2).html",  form=form, request = request, title = "Stratovault - Email Change")
+	return render_template("signup(page_2).html",  form=form, request = request_otp, title = "Stratovault - Email Change")
 		
 @app.route("/upload/", methods = ["GET", "POST"])
 @login_required
@@ -632,7 +640,7 @@ def profile():
 		if new_email != user_detail.email:
 			email_exist = Users.fetch("email", new_email)
 			if not email_exist:
-				session["email"] = new_email
+				session["new_email"] = new_email
 				return redirect(url_for("request_email_change"))
 			flash("Email already in use", "error")
 		
@@ -653,9 +661,14 @@ def profile():
 												profile_picture = profile_picture
 											)
 	
-
-@app.route("/logout/")
+@app.get("/session/")
+def get_session():
+	return dict(session)
+	
+@app.get("/logout/")
 @login_required
 def logout():
 	session.clear()
 	return redirect(url_for("login"))
+	
+app.run(debug = True)
