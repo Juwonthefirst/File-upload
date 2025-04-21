@@ -141,7 +141,7 @@ def signup2():
 				
 	elif request_otp.validate_on_submit():
 		response = resend_mail(app, session.get("email"))
-		if response == int():
+		if isinstance(response, int):
 			flash(f"Wait {response} before requesting for a new otp")
 		else:
 			response = Errors(error = str(response)).log()
@@ -489,7 +489,7 @@ def change_password():
 				logging.error(response)
 	elif request_otp.validate_on_submit():
 		response = resend_mail(app, session.get("recovery_email"))
-		if response == int():
+		if isinstance(response, int):
 			flash(f"Wait {response} before requesting for a new otp")
 		else:
 			response = Errors(error = str(response)).log()
@@ -543,7 +543,7 @@ def email_change():
 				logging.error(response)
 	elif request_otp.validate_on_submit():
 		response = resend_mail(app, session.get("new_email"))
-		if response == int():
+		if isinstance(response, int):
 			flash(f"Wait {response} before requesting for a new otp")
 		else:
 			response = Errors(error = str(response)).log()
@@ -667,15 +667,10 @@ def profile():
 												email = email,
 												profile_picture = profile_picture
 											)
-	
-@app.get("/session/")
-def get_session():
-	return dict(session)
+
 	
 @app.get("/logout/")
 @login_required
 def logout():
 	session.clear()
 	return redirect(url_for("login"))
-	
-app.run(debug = True)
