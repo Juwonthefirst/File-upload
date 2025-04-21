@@ -184,8 +184,7 @@ def resend_mail(app):
 	otp_time_to_live = cache.ttl(f"{request.cookies.get('anonymous_user_id')}:otp")
 	
 	if otp_time_to_live > 480:
-		response = f"Wait {stringify_time(600 - otp_time_to_live)} before requesting for a new otp"
-		flash(response, "success")
+		response = stringify_time(otp_time_to_live - 480)
 	else:
 		response = send_mail(app, session.get("email"))
 	return response

@@ -138,9 +138,12 @@ def signup2():
 				flash("Something went wrong, try again later", "error")
 				status = Errors(error = str(response)).log()
 				logging.error(status)
+				
 	elif request_otp.validate_on_submit():
 		response = resend_mail(app, session.get("email"))
-		if response != "Email sent":
+		if response == int():
+			flash(f"Wait {response} before requesting for a new otp")
+		else:
 			response = Errors(error = str(response)).log()
 			logging.error(response)
 		
@@ -486,9 +489,11 @@ def change_password():
 				logging.error(response)
 	elif request_otp.validate_on_submit():
 		response = resend_mail(app, session.get("recovery_email"))
-		if response != "Email sent":
+		if response == int():
+			flash(f"Wait {response} before requesting for a new otp")
+		else:
 			response = Errors(error = str(response)).log()
-			logging.error(response)	
+			logging.error(response)
 	return render_template("change_password.html", form = form, request = request_otp)
 
 
@@ -538,8 +543,10 @@ def email_change():
 				logging.error(response)
 	elif request_otp.validate_on_submit():
 		response = resend_mail(app, session.get("new_email"))
-		if response != "Email sent":
-			Errors(error = str(response)).log()
+		if response == int():
+			flash(f"Wait {response} before requesting for a new otp")
+		else:
+			response = Errors(error = str(response)).log()
 			logging.error(response)
 			
 	return render_template("signup(page_2).html",  form=form, request = request_otp, title = "Stratovault - Email Change")
