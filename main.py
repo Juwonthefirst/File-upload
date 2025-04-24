@@ -24,6 +24,7 @@ from helper_functions import (
 														not_logged_in, 
 														resend_mail,
 														stringify_byte,
+														stringify_time,
 														add_extension,
 														enable_cookies
 													)
@@ -35,7 +36,7 @@ import secrets, os, logging
 # flask configuration settings
 app = Flask(__name__)
 app.config.from_pyfile("config.py")
-app.permanent_session_lifetime = timedelta(days=30)
+app.permanent_session_lifetime = timedelta(days = 30)
 
 #initializing other modules
 db.init_app(app)
@@ -58,32 +59,45 @@ cache = Redis(connection_pool = redis_pool)
 def login():
 	form = LoginForm()
 	try:
-		request.cookies.get("anonymous_user_id")			
+		anonymous_user_id = request.cookies.get("anonymous_user_id")	
 		next_page = session.get("next_page")
 		if form.validate_on_submit():
 			detail = form.username.data.capitalize().strip()
 			password = form.password.data.strip()
 			user_info = Users.fetch_user_row(detail)
-			if user_info:
-				try:
-					if ph.verify(user_info.password, password):
-						file_sizes = Uploads.fetch("filesize", user_info.id, search = "user_id", all = True)
-						session.clear()
-						session.permanent = True
-						session.update({
+			account_locked = cache.exists(f"{user_info.id}: locked")
+			if user_info and not account_locked:
+				ph.verify(user_info.password, password)
+				file_sizes = Uploads.fetch("filesize", user_info.id, search = "user_id", all = True)
+				session.clear()
+				session.permanent = True
+				session.update({
 												"id": user_info.id,
 												"username": user_info.username,
 												"total_file_size": sum(file_sizes)
-												})
-						return redirect( next_page or url_for("home"))
-				except VerifyMismatchError:
-					flash("Incorrect Username and Password combination", "error")
+											})
+				cache.delete(f"{anonymous_user_id} : {user_info.id} attempts")
+				return redirect( next_page or url_for("home"))
 			else:
+				#time_until_unlocked = cache.ttl(f"{user_info.id}: locked")						
+#				flash(f"Your account has been locked for {stringify_time(time_until_unlocked)}", "error")
 				flash("Incorrect Username and Password combination", "error")
+				
+	except VerifyMismatchError:
+		flash("Incorrect Username and Password combination", "error")
+		cache.incrby(f"{anonymous_user_id} : {user_info.id} attempts", 1)
+		cache.expire(f"{anonymous_user_id} : {user_info.id} attempts", 60 * 10)
+		no_of_attempts = cache.get(f"{anonymous_user_id} : {user_info.id} attempts").decode()
+		if no_of_attempts == "5":
+			cache.delete(f"{anonymous_user_id} : {user_info.id} attempts")
+			cache.set(f"{user_info.id}: locked", "locked")
+			cache.expire(f"{user_info.id}: locked", 60 * 30)
+						
 	except Exception as err:
 		response = Errors(error = str(err)).log()
 		logging.error(response)
-	return render_template("login.html", form=form)
+		flash("Something went wrong, try again later", "error")
+	return render_template("login.html", form = form)
 
 
 @app.route("/signup/user-info/", methods = ["GET", "POST"])
@@ -111,7 +125,7 @@ def signup1():
 			logging.error(response)
 		else:
 			form.email.errors.append("Email already in use")
-	return render_template("signup(page_1).html",  form=form)
+	return render_template("signup(page_1).html",  form = form)
 				
 			
 @app.route("/signup/verify/", methods = ["GET", "POST"])
@@ -228,7 +242,7 @@ def cloud(folder):
 		return redirect(url_for("home"))
 	return render_template(
 												"home.html", 
-												files=list(dict.fromkeys(files)), 
+												files = list(dict.fromkeys(files)), 
 												heading = folder, 
 												folder = folder,
 												profile_picture = profile_picture
@@ -245,7 +259,7 @@ def download(folder, filename):
 		return redirect(url_for('cloud', folder = folder))
 	file_location = file_row.filelocation
 	try:
-		response = R2.get_file(file_location)
+		file = R2.get_file(file_location)
 	except Exception as err:
 		response = Errors(error = str(err), user_id = session.get("id")).log()
 		logging.error(response)
@@ -257,10 +271,11 @@ def download(folder, filename):
 		return redirect(url_for("cloud", folder = folder))
 		
 	return send_file (
-									BytesIO(response),
+									BytesIO(file),
 									download_name = filename,
 									as_attachment = True
 								)
+	
 	
 @app.route("/cloud/<string:folder>/<string:filename>/delete/", methods = ["GET", "POST"])
 @login_required
@@ -278,17 +293,14 @@ def delete(folder, filename):
 				file_row.delete()
 				session["total_file_size"] -= file_row.filesize
 				flash(f"{filename} removed from your cloud", "success")
-				return redirect(url_for("cloud", folder = folder))
-				
 			else:
 				flash("Unable to connect to your cloud", "error")
-				return redirect(url_for("cloud", folder = folder))
 					
 		except Exception as err:
 			response = Errors(error = str(err), user_id = user_id).log()
 			logging.error(response)
+			flash("Unable to connect to your cloud", "error")
 			
-		flash("Unable to connect to your cloud", "error")
 		return redirect(url_for("cloud", folder = folder))
 		
 	return render_template("confirm.html", form = form, filename = filename)
@@ -310,11 +322,11 @@ def preview(folder, filename):
 		for mime in allowed_mime:
 			if file_type.startswith(mime):
 				url = R2.preview(file_location)
-				if url:
-					return render_template ("preview.html", type = mime,url = url)
-				else:
+				if not url:
 					flash("Unable to connect to your cloud", "error")
 					return redirect(url_for("cloud", folder = folder))
+					
+				return render_template ("preview.html", type = mime,url = url)
 		flash("Can only preview Images, Videos or Audio", "error")
 	except Exception as err:
 		response = Errors(error = str(err), user_id = user_id).log()
@@ -379,7 +391,7 @@ def shared(token):
 			file_name = cache.hget(token, "filename").decode()
 			response = R2.get_file(file_location)
 		except Exception as err:
-			logging.error(Errors(error = str(err), user_id = session.get("id")).log())
+			logging.error(Errors(error = str(err), user_id = user_id).log())
 			response = None
 			flash("Something went wrong, please try again later", "error")
 			
@@ -411,7 +423,6 @@ def shared(token):
 	try:
 		if not cache.exists(token):
 			return render_template("shared.html", error = "Invalid Link")
-			#return render_template("Shared.html", error = "Expired Link")
 				
 		receivers_list = cache.hget(token, "receivers").decode()
 		if username in receivers_list.split(",") or receivers_list == "All":
@@ -674,3 +685,6 @@ def profile():
 def logout():
 	session.clear()
 	return redirect(url_for("login"))
+	
+	
+app.run(debug = True)

@@ -1,9 +1,8 @@
-import os, filetype, puremagic
+import os, filetype, puremagic, random, uuid
 from functools import wraps
 from flask import session, request, redirect, url_for, flash, make_response
 from flask_mail import Mail, Message
 from datetime import datetime, timedelta, timezone
-import random, uuid
 from redis import Redis, exceptions, ConnectionPool, SSLConnection
 
 redis_pool = ConnectionPool(
@@ -27,9 +26,9 @@ def stringify_byte(filesize):
 		
 def stringify_time(time):
 	if time >= 3600:
-		return f"{time / 3600} hours"
+		return f"{time // 3600} hours"
 	elif 60 <= time < 3600:
-		return f"{time / 60} minutes"
+		return f"{time // 60} minutes"
 	elif time < 60:
 		return f"{time} seconds"
 		
