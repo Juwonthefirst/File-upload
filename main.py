@@ -53,11 +53,12 @@ redis_pool = ConnectionPool(
 cache = Redis(connection_pool = redis_pool)
 
 # routing function
-
+#give the shared template's file details a max height with overflow-y auto '
 @app.route("/login/", methods = ["GET", "POST"])
 @not_logged_in
 def login():
 	form = LoginForm()
+	login_template = render_template("login.html", form = form)
 	try:
 		anonymous_user_id = request.cookies.get("anonymous_user_id")	
 		next_page = session.get("next_page")
@@ -65,39 +66,43 @@ def login():
 			detail = form.username.data.capitalize().strip()
 			password = form.password.data.strip()
 			user_info = Users.fetch_user_row(detail)
-			account_locked = cache.exists(f"{user_info.id}: locked")
-			if user_info and not account_locked:
-				ph.verify(user_info.password, password)
-				file_sizes = Uploads.fetch("filesize", user_info.id, search = "user_id", all = True)
-				session.clear()
-				session.permanent = True
-				session.update({
-												"id": user_info.id,
-												"username": user_info.username,
-												"total_file_size": sum(file_sizes)
-											})
-				cache.delete(f"{anonymous_user_id} : {user_info.id} attempts")
-				return redirect( next_page or url_for("home"))
-			else:
-				#time_until_unlocked = cache.ttl(f"{user_info.id}: locked")						
-#				flash(f"Your account has been locked for {stringify_time(time_until_unlocked)}", "error")
+			
+			if not user_info:
 				flash("Incorrect Username and Password combination", "error")
+				return login_template
+				
+			if cache.exists(f"{user_info.id}: locked"):
+				time_until_unlocked = cache.ttl(f"{user_info.id}: locked")						
+				flash(f"Your account has been locked for {stringify_time(time_until_unlocked)}", "error")
+				return login_template
+				
+			ph.verify(user_info.password, password)
+			file_sizes = Uploads.fetch("filesize", user_info.id, search = "user_id", all = True)
+			session.clear()
+			session.permanent = True
+			session.update({
+											"id": user_info.id,
+											"username": user_info.username,
+											"total_file_size": sum(file_sizes)
+										})
+			cache.delete(f"{anonymous_user_id} : {user_info.id} attempts")
+			return redirect( next_page or url_for("home"))
 				
 	except VerifyMismatchError:
-		flash("Incorrect Username and Password combination", "error")
-		cache.incrby(f"{anonymous_user_id} : {user_info.id} attempts", 1)
-		cache.expire(f"{anonymous_user_id} : {user_info.id} attempts", 60 * 10)
-		no_of_attempts = cache.get(f"{anonymous_user_id} : {user_info.id} attempts").decode()
-		if no_of_attempts == "5":
-			cache.delete(f"{anonymous_user_id} : {user_info.id} attempts")
-			cache.set(f"{user_info.id}: locked", "locked")
-			cache.expire(f"{user_info.id}: locked", 60 * 30)
+		key = f"{anonymous_user_id} : {user_info.id} attempts"
+		no_of_attempts = cache.incrby(key, 1)
+		cache.expire(key, 60 * 10)
+		flash(f"Incorrect Username and Password combination, {5 - no_of_attempts} attempts left", "error")
+		if no_of_attempts == 5:
+			cache.delete(key)
+			cache.set(f"{user_info.id}: locked", "locked", ex = 60 * 30)
 						
 	except Exception as err:
 		response = Errors(error = str(err)).log()
 		logging.error(response)
 		flash("Something went wrong, try again later", "error")
-	return render_template("login.html", form = form)
+		
+	return login_template
 
 
 @app.route("/signup/user-info/", methods = ["GET", "POST"])
@@ -171,40 +176,44 @@ def signup3():
 		return redirect(url_for("signup2"))
 		
 	form = SignupPage3()
+	signup3_template = render_template("signup(page_3).html",  form = form)
+	
 	if form.validate_on_submit():
 		next_page = session.get("next_page")
 		username = form.username.data.strip().capitalize()
 		password = form.password.data.strip()
 		username_exist = Users.fetch("username", username)
-		if not username_exist:
-			hashed_password = ph.hash(password)
-			new_user = Users(
-												username = username,
-												firstname = session.get("first_name"), 
-												lastname = session.get("last_name"), 
-												email = session.get("email"),
-												password = hashed_password
-											)
-			try:
-				if not new_user.save():
-					form.username.errors.append("Unknown error, Try logging in")
-				else:
-					session.clear()
-					session.permanent = True
-					session.update({
-													"id" : new_user.id,
-													"username" : username, 
-													"total_file_size": 0,
-													})
-					return redirect(next_page or url_for("home"))
-			except Exception as err:
-				response = Errors(error = str(err)).log()
-				logging.error(response)
-				flash("Something went wrong, please try again", "error")
-		else:
+		if username_exist:
 			form.username.errors.append("Username already in use")
+			return signup3_template
 			
-	return render_template("signup(page_3).html",  form=form)
+		hashed_password = ph.hash(password)
+		new_user = Users(
+											username = username,
+											firstname = session.get("first_name"), 
+											lastname = session.get("last_name"), 
+											email = session.get("email"),
+											password = hashed_password
+										)
+		try:
+			if not new_user.save():
+				flash("Unknown error, Try logging in", "flash")
+				return signup3_template
+			session.clear()
+			session.permanent = True
+			session.update({
+											"id" : new_user.id,
+											"username" : username, 
+											"total_file_size": 0
+										})
+			return redirect(next_page or url_for("home"))
+			
+		except Exception as err:
+			response = Errors(error = str(err)).log()
+			logging.error(response)
+			flash("Something went wrong, please try again", "error")
+			
+	return signup3_template
 	
 
 @app.get("/")
@@ -444,7 +453,7 @@ def shared(token):
 													)
 													
 	except exceptions.ConnectionError:
-			flash("Unable to retrieve data at the moment", "error")
+		flash("Unable to retrieve data at the moment", "error")
 	except Exception as err:
 		response = Errors(error = str(err), user_id = user_id).log()
 		logging.error(response)										
@@ -536,6 +545,7 @@ def email_change():
 	form = SignupPage2()
 	if "new_email" not in session:
 		return redirect(url_for("request_email_change"))
+		
 	if form.validate_on_submit():
 		otp = form.otp.data
 		response = verify_otp(otp)
@@ -576,7 +586,8 @@ def upload():
 			if not file_name:
 				file_name = file.filename
 			file_name = file_name.replace("/", "-")
-			file_size = len(file.read())
+			file.seek(0, 2)
+			file_size = file.tell()
 			file.seek(0)
 			file_data = Uploads(
 													filename = file_name, 
@@ -607,10 +618,7 @@ def upload():
 			
 		else:
 			mime = get_mime(file)
-			if mime:
-				flash(f"{mime} not supported", "error")
-			else:
-				flash(f"File type not supported", "error")
+			flash(f"File type not supported", "error")
 				
 	folders = Uploads.fetch("folder", user_id, search = "user_id", all = True)
 				
