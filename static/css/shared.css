@@ -83,6 +83,7 @@ form > input{
     border-radius: 10px;
     padding: 10px;
     max-width: 90%;
+    overflow-x: auto;
 }
 
 #details-heading{

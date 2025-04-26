@@ -523,10 +523,10 @@ def request_email_change():
 	user_id = session.get("id")
 	form = VerifyPassword()
 	if form.validate_on_submit():
-		user_details = db.session.get(Users, user_id)
+		user_password = Users.fetch("password", user_id, "id")
 		password = form.password.data.strip()
 		try:
-			if ph.verify(user_details.password, password):
+			if ph.verify(user_password, password):
 				response = send_mail(app, session.get("new_email"))
 				if response == "Email sent":
 					return redirect(url_for("email_change")) 
