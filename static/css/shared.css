@@ -70,6 +70,7 @@ form > input{
     border-radius: 1rem;
     font-size: 1.2rem;
     background-color: #48A6A7;
+    color: ghostwhite;
 }
 
 .details{
@@ -82,6 +83,7 @@ form > input{
     border-radius: 10px;
     padding: 10px;
     max-width: 90%;
+    overflow-x: auto;
 }
 
 #details-heading{

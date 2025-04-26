@@ -1,9 +1,4 @@
 
-h2{
-    font-weight: 600;
-    color: ghostwhite;
-}
-
 
 .submit{
     padding-bottom: 5em;
@@ -13,7 +8,7 @@ h2{
 
 
 .greeting{
-    padding: 3em 0 3em;
+    padding-top: 3em;
     display: flex;
     flex-direction: column;
     justify-content: center;
