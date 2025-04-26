@@ -723,6 +723,3 @@ def profile():
 def logout():
 	session.clear()
 	return redirect(url_for("login"))
-	
-	
-app.run(debug = True)
