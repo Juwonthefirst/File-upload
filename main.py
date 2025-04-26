@@ -110,26 +110,29 @@ def login():
 def signup1():
 				
 	form = SignupPage1()
+	
 	if form.validate_on_submit():
 		first_name = form.first_name.data.strip().capitalize()
 		last_name = form.last_name.data.strip().capitalize()
 		email = form.email.data.strip().capitalize()
 		email_exist = Users.fetch("email", email)
-		if not email_exist:
-			session.permanent = True
-			session.update({
-											"first_name": first_name,
-											"last_name": last_name,
-											"email": email											
-											})
-			response = send_mail(app, email)
-			if response == "Email sent":
-				return redirect(url_for("signup2"))
-			flash("Something went wrong, try again later", "error")
-			response = Errors(error = str(response)).log()
-			logging.error(response)
-		else:
+		if email_exist:
 			form.email.errors.append("Email already in use")
+			return render_template("signup(page_1).html",  form = form)
+			
+		session.permanent = True
+		session.update({
+										"first_name": first_name,
+										"last_name": last_name,
+										"email": email											
+									})
+		response = send_mail(app, email)
+		if response == "Email sent":
+			return redirect(url_for("signup2"))
+		flash("Something went wrong, try again later", "error")
+		response = Errors(error = str(response)).log()
+		logging.error(response)
+		
 	return render_template("signup(page_1).html",  form = form)
 				
 			
@@ -176,7 +179,6 @@ def signup3():
 		return redirect(url_for("signup2"))
 		
 	form = SignupPage3()
-	signup3_template = render_template("signup(page_3).html",  form = form)
 	
 	if form.validate_on_submit():
 		next_page = session.get("next_page")
@@ -185,7 +187,7 @@ def signup3():
 		username_exist = Users.fetch("username", username)
 		if username_exist:
 			form.username.errors.append("Username already in use")
-			return signup3_template
+			return render_template("signup(page_3).html",  form = form)
 			
 		hashed_password = ph.hash(password)
 		new_user = Users(
@@ -198,7 +200,7 @@ def signup3():
 		try:
 			if not new_user.save():
 				flash("Unknown error, Try logging in", "flash")
-				return signup3_template
+				return render_template("signup(page_3).html",  form = form)
 			session.clear()
 			session.permanent = True
 			session.update({
@@ -213,7 +215,7 @@ def signup3():
 			logging.error(response)
 			flash("Something went wrong, please try again", "error")
 			
-	return signup3_template
+	return render_template("signup(page_3).html",  form = form)
 	
 
 @app.get("/")
@@ -275,7 +277,7 @@ def download(folder, filename):
 		flash("Something went wrong, please try again later", "error")
 		return redirect(url_for("cloud", folder = folder))
 		
-	if  response == "File not found":
+	if  file == "File not found":
 		flash("File not found", "error")
 		return redirect(url_for("cloud", folder = folder))
 		
@@ -340,7 +342,7 @@ def preview(folder, filename):
 	except Exception as err:
 		response = Errors(error = str(err), user_id = user_id).log()
 		logging.error(response)
-		flash("Something went wrong, Please try again later", "error")
+		flash("Something went wrong, try again later", "error")
 	
 	return redirect(url_for("cloud", folder = folder))	
 	
@@ -456,7 +458,8 @@ def shared(token):
 		flash("Unable to retrieve data at the moment", "error")
 	except Exception as err:
 		response = Errors(error = str(err), user_id = user_id).log()
-		logging.error(response)										
+		logging.error(response)
+		flash("Something went wrong, try again later", "error")										
 	return render_template("shared.html", error = "Access Denied")
 
 
@@ -464,21 +467,25 @@ def shared(token):
 @enable_cookies
 def request_password_change():
 	form = RequestChangePass()
+	RequestChangePass_template = render_template("request_password_change.html", form = form)
+	
 	if form.validate_on_submit():
 		detail = form.detail.data.strip().capitalize()
 		user_info = Users.fetch_user_row(detail)
-		if user_info:
-			response = send_mail(app, user_info.email)
-			if response == "Email sent":
-				session["recovery_id"] = user_info.id
-				session["recovery_email"] = user_info.email
-				return redirect(url_for("change_password"))
+		if not user_info:
+			flash("User doesn't exist", "error")
+			return RequestChangePass_template
+		response = send_mail(app, user_info.email)
+		if response != "Email sent":
 			status = Errors(error = str(response)).log()
 			logging.error(status)
-		else:
-			flash("User doesn't exist", "error")
-	return render_template("request_password_change.html", form = form)
-	
+			flash("Something went wrong, try again later", "error")
+			return RequestChangePass_template
+			
+		session["recovery_id"] = user_info.id
+		session["recovery_email"] = user_info.email
+		return redirect(url_for("change_password"))
+	return RequestChangePass_template
 
 @app.route("/password/change/", methods = ["GET", "POST"])
 @enable_cookies
@@ -507,6 +514,7 @@ def change_password():
 				flash("Something went wrong, try again later", "error")
 				response = Errors(error = str(response)).log()
 				logging.error(response)
+				
 	elif request_otp.validate_on_submit():
 		response = resend_mail(app, session.get("recovery_email"))
 		if isinstance(response, int):
@@ -514,6 +522,7 @@ def change_password():
 		else:
 			response = Errors(error = str(response)).log()
 			logging.error(response)
+			flash("Something went wrong, try again later", "error")
 	return render_template("change_password.html", form = form, request = request_otp)
 
 
@@ -532,6 +541,7 @@ def request_email_change():
 					return redirect(url_for("email_change")) 
 				response = Errors(error = str(response), user_id = user_id).log()
 				logging.error(response)
+				flash("Something went wrong, try again later", "error")
 				
 		except VerifyMismatchError:
 			form.password.errors.append("Incorrect Password")
@@ -569,6 +579,7 @@ def email_change():
 		else:
 			response = Errors(error = str(response)).log()
 			logging.error(response)
+			flash("Something went wrong, try again later", "error")
 			
 	return render_template("signup(page_2).html",  form=form, request = request_otp, title = "Stratovault - Email Change")
 		
@@ -577,50 +588,69 @@ def email_change():
 def upload():
 	user_id = session.get("id")
 	upload = FileUpload()
+	folders = Uploads.fetch("folder", user_id, search = "user_id", all = True)
+											
 	if upload.validate_on_submit():
 		file = upload.file.data
 		mime_type = validate_mime(file)
-		if mime_type:
-			folder = secure_filename(request.form.get("folder"))
-			file_name = add_extension(upload.filename.data.strip(), file.mimetype)
-			if not file_name:
-				file_name = file.filename
-			file_name = file_name.replace("/", "-")
-			file.seek(0, 2)
-			file_size = file.tell()
-			file.seek(0)
-			file_data = Uploads(
-													filename = file_name, 
-													filesize = file_size,
-													folder = folder,
-													filelocation = "nill", 
-													content_type = mime_type, 
-													user_id = user_id
-												)
-			try:						
-				if file_data.save():
-					file_location = f"{user_id}/{folder}/{file_data.id}"
-					file_data.filelocation = file_location
-					db.session.commit()
-					if R2.upload(file, file_location):
-						session["total_file_size"] += file_size
-						flash("Cloud upload successful", "success")
-					else:
-						flash("Unable to connect to the cloud", "error")
-						file_data.delete()
-				else:
-					flash("File already exists", "error")
-					upload.filename.errors.append("Change File name ")
-			except Exception as err:
-					response = Errors(error = str(err), user_id = user_id).log()
-					logging.error(response)
-					flash("Something went wrong, please try again later", "error")
-			
-		else:
+		if not mime_type:
 			mime = get_mime(file)
-			flash(f"File type not supported", "error")
+			flash("File type not supported", "error")
+			return render_template(
+														"upload.html", 
+														upload = upload, 
+														total_file_size = stringify_byte(session.get("total_file_size")), 
+														folders = list(dict.fromkeys(folders))
+													)
+			
+		folder = secure_filename(request.form.get("folder"))
+		file_name = add_extension(upload.filename.data.strip(), file.mimetype)
+		if not file_name:
+			file_name = file.filename
+		file_name = file_name.replace("/", "-")
+		file.seek(0, 2)
+		file_size = file.tell()
+		file.seek(0)
+		file_data = Uploads(
+												filename = file_name, 
+												filesize = file_size,
+												folder = folder,
+												filelocation = "nill", 
+												content_type = mime_type, 
+												user_id = user_id
+											)
+		try:						
+			if not file_data.save():
+				flash("File already exists", "error")
+				upload.filename.errors.append("Change File name ")
+				return render_template(
+															"upload.html", 
+															upload = upload, 
+															total_file_size = stringify_byte(session.get("total_file_size")), 
+															folders = list(dict.fromkeys(folders))
+														)
 				
-	folders = Uploads.fetch("folder", user_id, search = "user_id", all = True)
+			file_location = f"{user_id}/{folder}/{file_data.id}"
+			file_data.filelocation = file_location
+			db.session.commit()
+			
+			if not R2.upload(file, file_location):
+				flash("Unable to connect to the cloud", "error")
+				file_data.delete()
+				return render_template(
+															"upload.html", 
+															upload = upload, 
+															total_file_size = stringify_byte(session.get("total_file_size")), 
+															folders = list(dict.fromkeys(folders))
+														)
+				
+			session["total_file_size"] += file_size
+			flash("Cloud upload successful", "success")
+			
+		except Exception as err:
+				response = Errors(error = str(err), user_id = user_id).log()
+				logging.error(response)
+				flash("Something went wrong, please try again later", "error")
 				
 	return render_template(
 												"upload.html", 
@@ -659,8 +689,8 @@ def profile():
 			except Exception as err:
 				response = Errors(error = str(err), user_id = user_id).log()
 				logging.error(response)
-				flash("Something went wrong, please try again later", "error")
-
+				flash("Something went wrong, try again later", "error")
+				
 	if email.validate_on_submit():
 		new_email = email.email.data.strip().capitalize()
 		if new_email != user_detail.email:
