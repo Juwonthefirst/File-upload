@@ -603,7 +603,7 @@ def upload():
 														folders = list(dict.fromkeys(folders))
 													)
 			
-		folder = secure_filename(request.form.get("folder"))
+		folder = request.form.get("folder")
 		file_name = add_extension(upload.filename.data.strip(), file.mimetype)
 		if not file_name:
 			file_name = file.filename
@@ -630,7 +630,7 @@ def upload():
 															folders = list(dict.fromkeys(folders))
 														)
 				
-			file_location = f"{user_id}/{folder}/{file_data.id}"
+			file_location = f"{user_id}/{secure_filename(folder)}/{file_data.id}"
 			file_data.filelocation = file_location
 			db.session.commit()
 			
