@@ -30,7 +30,7 @@ iconify-icon{
 
 .body{
     display: flex;
-    height: 100vh;
+    height: 100dvh;
     flex-direction: column;
     background-color: powderblue;
     overflow: hidden;
